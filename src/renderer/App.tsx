@@ -127,7 +127,7 @@ export function App() {
       {/* Input row */}
       <div className="input-row">
         <div className="logo-lottie-wrap">
-          <LogoLottie state={mascotState} size={60} />
+          <LogoLottie state={mascotState} size={120} />
         </div>
 
         <input
