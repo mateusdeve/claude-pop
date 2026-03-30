@@ -1,3 +1,4 @@
+import path from 'path';
 import { Tray, Menu, nativeImage, app } from 'electron';
 import { getConfig, setPosition, type OverlayPosition } from './store';
 
@@ -13,16 +14,10 @@ const POSITIONS: { label: string; value: OverlayPosition }[] = [
 ];
 
 export function createTray(onQuit: () => void, onPositionChange: () => void) {
-  const icon = nativeImage.createFromDataURL(
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA' +
-    'mElEQVQ4T2NkoBAwUqifYdAY8B8E/v8HsxkZGRnBbJIMABkA0wBiE2UAyACQJhAbpxeI' +
-    'NQBkAEgT2AuEDCDWAJABIE0wL+A0gBgDQAaANMEMwDSAkAEgTTADMA0gZADIAJAmZBfg' +
-    'MoCQASBNyAbgNICQASBNIAPQXUDIAJAmkAEwF+AygJABIE1gA3AZQKwBAABnWikRdwczcA' +
-    'AAAASUVORK5CYII='
-  );
-
+  const iconPath = path.join(__dirname, '../../assets/icon.png');
+  const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
   icon.setTemplateImage(true);
-  tray = new Tray(icon.resize({ width: 16, height: 16 }));
+  tray = new Tray(icon);
 
   function buildMenu() {
     const current = getConfig().position;
