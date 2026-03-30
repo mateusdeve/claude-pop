@@ -5,6 +5,7 @@ module.exports = {
     icon: './assets/icon',
     appBundleId: 'com.mateusdeve.claude-pop',
     asar: true,
+    osxSign: {},
     ignore: [
       /^\/src$/,
       /^\/tsconfig/,
