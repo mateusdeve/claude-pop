@@ -32,6 +32,7 @@
     "postinstall": "npm run build"
   },
   "dependencies": {
+    "electron-updater": "^6.8.3",
     "express": "^4.21.0",
     "lottie-react": "^2.4.1"
   },
@@ -43,6 +44,7 @@
     "@electron-forge/maker-squirrel": "^7.11.1",
     "@electron-forge/maker-zip": "^7.11.1",
     "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
+    "@electron-forge/publisher-github": "^7.11.1",
     "@types/express": "^4.17.21",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",

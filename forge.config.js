@@ -14,6 +14,19 @@ module.exports = {
       /^\/\.gitignore/,
     ],
   },
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'mateusdeve',
+          name: 'claude-pop',
+        },
+        prerelease: false,
+        draft: false,
+      },
+    },
+  ],
   makers: [
     // macOS
     {

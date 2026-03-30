@@ -38,6 +38,75 @@ jobs:
       - name: Make distributables
         run: npx electron-forge make
 
+      - name: Generate update manifest (macOS)
+        if: matrix.platform == 'darwin'
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cd out/make
+          ZIP=$(find . -name '*.zip' | head -1)
+          if [ -n "$ZIP" ]; then
+            SHA512=$(shasum -a 512 "$ZIP" | awk '{print $1}')
+            SIZE=$(stat -f%z "$ZIP" 2>/dev/null || stat -c%s "$ZIP")
+            BASENAME=$(basename "$ZIP")
+            cat > latest-mac.yml <<EOF
+          version: ${VERSION}
+          files:
+            - url: ${BASENAME}
+              sha512: ${SHA512}
+              size: ${SIZE}
+          path: ${BASENAME}
+          sha512: ${SHA512}
+          releaseDate: '$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'
+          EOF
+          fi
+
+      - name: Generate update manifest (Linux)
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cd out/make
+          DEB=$(find . -name '*.deb' | head -1)
+          if [ -n "$DEB" ]; then
+            SHA512=$(sha512sum "$DEB" | awk '{print $1}')
+            SIZE=$(stat -c%s "$DEB")
+            BASENAME=$(basename "$DEB")
+            cat > latest-linux.yml <<EOF
+          version: ${VERSION}
+          files:
+            - url: ${BASENAME}
+              sha512: ${SHA512}
+              size: ${SIZE}
+          path: ${BASENAME}
+          sha512: ${SHA512}
+          releaseDate: '$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'
+          EOF
+          fi
+
+      - name: Generate update manifest (Windows)
+        if: matrix.platform == 'win32'
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cd out/make
+          EXE=$(find . -name '*.exe' | head -1)
+          if [ -n "$EXE" ]; then
+            SHA512=$(sha512sum "$EXE" | awk '{print $1}')
+            SIZE=$(stat -c%s "$EXE")
+            BASENAME=$(basename "$EXE")
+            cat > latest.yml <<EOF
+          version: ${VERSION}
+          files:
+            - url: ${BASENAME}
+              sha512: ${SHA512}
+              size: ${SIZE}
+          path: ${BASENAME}
+          sha512: ${SHA512}
+          releaseDate: '$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'
+          EOF
+          fi
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

@@ -4,6 +4,7 @@ import { OverlayServer } from './server';
 import { SessionManager } from './sessions';
 import { sendTextToSession } from './responder';
 import { createTray } from './tray';
+import { initAutoUpdater } from './updater';
 import { getSessionMeta, setSessionName, toggleFavorite, getConfig, setPosition, type OverlayPosition } from './store';
 import type { OverlayState, PermissionDecision, OverlayEvent, ClaudeSession } from '../shared/types';
 import { IPC } from '../shared/types';
@@ -293,6 +294,7 @@ async function main() {
   await app.whenReady();
 
   app.dock?.hide();
+  initAutoUpdater();
 
   createWindow();
   setupIPC();
