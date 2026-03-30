@@ -33,7 +33,6 @@ module.exports = {
       config: {
         name: 'ClaudePop',
         setupExe: 'Claude Pop Setup.exe',
-        setupIcon: './assets/icon.ico',
       },
     },
     // Linux .deb (Ubuntu/Debian)
