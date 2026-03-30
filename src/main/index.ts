@@ -31,6 +31,26 @@ function getSessionMode(sessionId?: string): string {
   return state.sessionApprovalModes[sessionId] || 'manual';
 }
 
+/** Map Claude Code's permission_mode string to our ApprovalMode */
+function mapClaudeMode(permissionMode?: string): 'manual' | 'allow-session' | 'allow-all' | null {
+  if (!permissionMode) return null;
+  switch (permissionMode) {
+    case 'default': return 'manual';
+    case 'acceptEdits': return 'allow-session';
+    case 'bypassPermissions': return 'allow-all';
+    default: return null;
+  }
+}
+
+/** Sync session approval mode from Claude Code's hook data */
+function syncSessionMode(event: OverlayEvent) {
+  if (!event.sessionId || !event.permissionMode) return;
+  const mapped = mapClaudeMode(event.permissionMode);
+  if (mapped) {
+    state.sessionApprovalModes[event.sessionId] = mapped;
+  }
+}
+
 const BAR_WIDTH = 520;
 const BAR_HEIGHT_NORMAL = 48;
 const BAR_HEIGHT_PERMISSION = 118;
@@ -307,6 +327,7 @@ async function main() {
       const match = state.sessions.find(s => s.sessionId === event.sessionId);
       if (match) event.sessionPid = match.pid;
     }
+    syncSessionMode(event);
     pushEvent(event);
     if (event.type === 'idle_prompt') {
       notify('Claude idle', 'Claude is waiting for input');
@@ -322,10 +343,11 @@ async function main() {
       const match = state.sessions.find(s => s.sessionId === event.sessionId);
       if (match) event.sessionPid = match.pid;
     }
+    syncSessionMode(event);
 
     pushEvent(event);
 
-    // Check THIS SESSION's approval mode
+    // Check THIS SESSION's approval mode (synced from Claude Code)
     const mode = getSessionMode(event.sessionId);
 
     if (mode === 'allow-all') {
@@ -355,6 +377,7 @@ async function main() {
       const match = state.sessions.find(s => s.sessionId === event.sessionId);
       if (match) event.sessionPid = match.pid;
     }
+    syncSessionMode(event);
 
     const question = (toolInput.question as string) || event.message || 'Claude needs input';
     const options = ((toolInput.options as any[]) || []).map((o: any) => ({

@@ -26,6 +26,8 @@ export interface OverlayEvent {
   tool?: string;
   message?: string;
   description?: string;
+  /** Claude Code's permission_mode from hook data */
+  permissionMode?: string;
   raw: Record<string, unknown>;
   timestamp: number;
 }

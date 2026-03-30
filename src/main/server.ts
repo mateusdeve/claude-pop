@@ -116,6 +116,9 @@ export class OverlayServer extends EventEmitter {
     if (!message && label) message = label;
     if (!description) description = message || label || 'Acao solicitada';
 
+    // Claude Code sends permission_mode in hook data
+    const permissionMode = raw.permission_mode as string | undefined;
+
     return {
       id: randomUUID(),
       type: this.parseEventType(raw),
@@ -123,6 +126,7 @@ export class OverlayServer extends EventEmitter {
       tool: label || toolName,
       message,
       description,
+      permissionMode,
       raw,
       timestamp: Date.now(),
     };
