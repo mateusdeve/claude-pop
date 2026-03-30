@@ -1,5 +1,6 @@
-import { app, BrowserWindow, globalShortcut, ipcMain, screen, Notification } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, screen, Notification, nativeImage, dialog } from 'electron';
 import { join } from 'path';
+import { exec } from 'child_process';
 import { OverlayServer } from './server';
 import { SessionManager } from './sessions';
 import { sendTextToSession } from './responder';
@@ -53,17 +54,9 @@ function syncSessionMode(event: OverlayEvent) {
 }
 
 const BAR_WIDTH = 520;
-const BAR_HEIGHT_NORMAL = 48;
-const BAR_HEIGHT_PERMISSION = 118;
-const BAR_HEIGHT_QUESTION = 310;
-const BAR_HEIGHT_QUESTION_TEXT = 144;
-const BAR_HEIGHT_SESSION_ITEM = 40;
-const BAR_HEIGHT_SESSION_PAD = 14;
 const MARGIN_BOTTOM = 40;
 
-let sessionListOpen = false;
-let sessionListCount = 0;
-let extraPanelHeight = 0;
+let reportedHeight = 48;
 
 function sendState() {
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -73,20 +66,28 @@ function sendState() {
 
 function notify(title: string, body: string) {
   if (!state.expanded && Notification.isSupported()) {
-    const n = new Notification({ title, body, silent: false });
+    const iconPath = join(__dirname, '..', '..', 'assets', 'icon.png');
+    const n = new Notification({ title, body, silent: false, icon: nativeImage.createFromPath(iconPath) });
     n.on('click', () => showBar());
     n.show();
   }
 }
 
+let idleTimer: ReturnType<typeof setTimeout> | null = null;
+
 function updateStatus(event: OverlayEvent) {
   state.lastTool = event.tool;
+  if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+
   if (event.type === 'permission_prompt' || event.type === 'elicitation_dialog' || event.type === 'idle_prompt') {
     state.sessionStatus = 'waiting';
-  } else if (event.type === 'tool_use') {
-    state.sessionStatus = 'working';
   } else {
     state.sessionStatus = 'working';
+    // Go idle after 3s without new events
+    idleTimer = setTimeout(() => {
+      state.sessionStatus = 'idle';
+      sendState();
+    }, 3000);
   }
 }
 
@@ -97,15 +98,7 @@ function pushEvent(event: OverlayEvent) {
 }
 
 function getContentHeight(): number {
-  const sessionListHeight = sessionListOpen
-    ? BAR_HEIGHT_SESSION_PAD + Math.min(sessionListCount, 5) * BAR_HEIGHT_SESSION_ITEM
-    : 0;
-  if (state.pendingQuestion) {
-    return state.pendingQuestion.options.length > 0 ? BAR_HEIGHT_QUESTION : BAR_HEIGHT_QUESTION_TEXT;
-  }
-  const base = state.pendingPermission ? BAR_HEIGHT_PERMISSION + sessionListHeight
-    : BAR_HEIGHT_NORMAL + sessionListHeight;
-  return base + extraPanelHeight;
+  return reportedHeight;
 }
 
 function positionBar() {
@@ -126,13 +119,12 @@ function positionBar() {
     default:             x = Math.round(sw / 2 - BAR_WIDTH / 2); y = sh - h - margin; break;
   }
 
-  mainWindow.setMinimumSize(BAR_WIDTH, h);
   mainWindow.setSize(BAR_WIDTH, h);
   mainWindow.setPosition(x, y);
 }
 
 function resizeBar() {
-  if (!mainWindow || !state.expanded) return;
+  if (!mainWindow) return;
   positionBar();
 }
 
@@ -160,7 +152,7 @@ function toggleBar() {
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: BAR_WIDTH,
-    height: BAR_HEIGHT_NORMAL,
+    height: 48,
     show: false,
     frame: false,
     transparent: true,
@@ -250,15 +242,39 @@ function setupIPC() {
     }
   });
 
-  ipcMain.on(IPC.SESSION_LIST_TOGGLE, (_e, { open, count }: { open: boolean; count: number }) => {
-    sessionListOpen = open;
-    sessionListCount = count;
-    resizeBar();
+  ipcMain.on(IPC.SESSION_LIST_TOGGLE, () => {
+    // Height is now reported by renderer via CONTENT_HEIGHT
   });
 
-  ipcMain.on(IPC.PANEL_HEIGHT, (_e, height: number) => {
-    extraPanelHeight = height;
-    resizeBar();
+  ipcMain.on(IPC.PANEL_HEIGHT, () => {
+    // Height is now reported by renderer via CONTENT_HEIGHT
+  });
+
+  ipcMain.on(IPC.CONTENT_HEIGHT, (_e, height: number) => {
+    if (height > 0 && height !== reportedHeight) {
+      reportedHeight = height;
+      positionBar();
+    }
+  });
+
+  ipcMain.on(IPC.NEW_SESSION, async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Escolha a pasta do projeto',
+      properties: ['openDirectory'],
+      buttonLabel: 'Abrir com Claude',
+    });
+    if (result.canceled || result.filePaths.length === 0) return;
+    const dir = result.filePaths[0];
+    if (process.platform === 'darwin') {
+      exec(`osascript -e '
+        tell application "Terminal"
+          activate
+          do script "cd ${dir.replace(/'/g, "\\'")} && claude"
+        end tell
+      '`);
+    } else {
+      exec(`x-terminal-emulator -e "bash -c 'cd ${dir} && claude'"`);
+    }
   });
 
   ipcMain.on(IPC.SET_APPROVAL_MODE, (_e, { sessionId, mode }: { sessionId: string; mode: string }) => {

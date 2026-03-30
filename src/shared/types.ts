@@ -91,4 +91,6 @@ export const IPC = {
   SESSION_LIST_TOGGLE: 'overlay:session-list-toggle',
   PANEL_HEIGHT: 'overlay:panel-height',
   SET_APPROVAL_MODE: 'overlay:set-approval-mode',
+  CONTENT_HEIGHT: 'overlay:content-height',
+  NEW_SESSION: 'overlay:new-session',
 } as const;

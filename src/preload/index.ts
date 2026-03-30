@@ -14,6 +14,8 @@ const IPC = {
   SESSION_LIST_TOGGLE: 'overlay:session-list-toggle',
   PANEL_HEIGHT: 'overlay:panel-height',
   SET_APPROVAL_MODE: 'overlay:set-approval-mode',
+  CONTENT_HEIGHT: 'overlay:content-height',
+  NEW_SESSION: 'overlay:new-session',
 } as const;
 
 const api = {
@@ -69,6 +71,14 @@ const api = {
 
   setApprovalMode(sessionId: string, mode: string) {
     ipcRenderer.send(IPC.SET_APPROVAL_MODE, { sessionId, mode });
+  },
+
+  reportContentHeight(height: number) {
+    ipcRenderer.send(IPC.CONTENT_HEIGHT, height);
+  },
+
+  newSession() {
+    ipcRenderer.send(IPC.NEW_SESSION);
   },
 };
 

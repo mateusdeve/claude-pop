@@ -58,9 +58,14 @@ export class OverlayServer extends EventEmitter {
   }
 
   private buildEvent(raw: Record<string, unknown>): OverlayEvent {
-    const toolInput = raw.toolInput as Record<string, unknown> | undefined;
-    const toolName = raw.toolName as string | undefined;
+    // Handle both camelCase (toolInput) and snake_case (tool_input) from Claude Code
+    const toolInput = (raw.toolInput || raw.tool_input) as Record<string, unknown> | undefined;
+    const toolName = (raw.toolName || raw.tool_name) as string | undefined;
     const sessionId = (raw.sessionId || raw.session_id) as string | undefined;
+
+    console.log('[server] buildEvent raw keys:', Object.keys(raw).join(', '));
+    if (toolName) console.log('[server] toolName:', toolName);
+    if (toolInput) console.log('[server] toolInput keys:', Object.keys(toolInput).join(', '));
 
     let message = '';
     let description = '';
@@ -68,13 +73,12 @@ export class OverlayServer extends EventEmitter {
 
     if (toolInput) {
       const cmd = toolInput.command as string | undefined;
-      const filePath = toolInput.file_path as string | undefined;
+      const filePath = (toolInput.file_path || toolInput.filePath) as string | undefined;
       const question = toolInput.question as string | undefined;
       const pattern = toolInput.pattern as string | undefined;
       const content = toolInput.content as string | undefined;
       const desc = toolInput.description as string | undefined;
-      const oldStr = toolInput.old_string as string | undefined;
-      const newStr = toolInput.new_string as string | undefined;
+      const oldStr = (toolInput.old_string || toolInput.oldString) as string | undefined;
       const url = toolInput.url as string | undefined;
       const prompt = toolInput.prompt as string | undefined;
 
@@ -88,20 +92,23 @@ export class OverlayServer extends EventEmitter {
 
       // Build a detailed description for the permission card
       if (toolName === 'Bash' && cmd) {
-        description = `Executar comando: ${cmd.slice(0, 200)}`;
+        const cmdPreview = cmd.split('\n')[0].slice(0, 200);
+        description = desc
+          ? `${desc} — ${cmdPreview}`
+          : `Executar: ${cmdPreview}`;
       } else if (toolName === 'Write' && filePath) {
-        description = `Criar/sobrescrever arquivo: ${filePath}`;
+        description = `Criar/sobrescrever: ${filePath}`;
       } else if (toolName === 'Edit' && filePath) {
         const preview = oldStr ? oldStr.split('\n')[0].slice(0, 60) : '';
         description = `Editar ${filePath}${preview ? ` — "${preview}..."` : ''}`;
       } else if (toolName === 'Read' && filePath) {
-        description = `Ler arquivo: ${filePath}`;
+        description = `Ler: ${filePath}`;
       } else if (toolName === 'Glob' && pattern) {
         description = `Buscar arquivos: ${pattern}`;
       } else if (toolName === 'Grep' && pattern) {
         description = `Buscar "${pattern}" nos arquivos`;
       } else if (toolName === 'WebFetch' && url) {
-        description = `Acessar URL: ${url}`;
+        description = `Acessar: ${url}`;
       } else if (toolName === 'WebSearch' && prompt) {
         description = `Pesquisar: ${prompt}`;
       } else if (toolName === 'Agent' && prompt) {
@@ -113,8 +120,11 @@ export class OverlayServer extends EventEmitter {
       }
     }
 
-    if (!message && label) message = label;
-    if (!description) description = message || label || 'Acao solicitada';
+    // Better fallback: always include tool name if available
+    if (!message) message = label || toolName || '';
+    if (!description) {
+      description = label ? `${label}` : (toolName || 'Acao solicitada');
+    }
 
     // Claude Code sends permission_mode in hook data
     const permissionMode = raw.permission_mode as string | undefined;

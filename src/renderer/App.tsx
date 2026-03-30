@@ -6,43 +6,48 @@ const api = (window as any).overlayAPI;
 /* ===== Figma SVG Icons ===== */
 
 const IconGrid = () => (
-  <svg width="10" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M3.35289 3.7049C3.54789 3.7049 3.70539 3.5474 3.70539 3.3524C3.70539 3.1574 3.54789 2.9999 3.35289 2.9999C3.15789 2.9999 3.00039 3.1574 3.00039 3.3524C3.00039 3.5474 3.15789 3.7049 3.35289 3.7049ZM4.30539 3.3524C4.30539 3.8774 3.87789 4.3049 3.35289 4.3049C2.82789 4.3049 2.40039 3.8774 2.40039 3.3524C2.40039 2.8274 2.82789 2.3999 3.35289 2.3999C3.87789 2.3999 4.30539 2.8274 4.30539 3.3524ZM6.45789 3.7049C6.65289 3.7049 6.81039 3.5474 6.81039 3.3524C6.81039 3.1574 6.65289 2.9999 6.45789 2.9999C6.26289 2.9999 6.10539 3.1574 6.10539 3.3524C6.10539 3.5474 6.26289 3.7049 6.45789 3.7049ZM7.41039 3.3524C7.41039 3.8774 6.98289 4.3049 6.45789 4.3049C5.93289 4.3049 5.50539 3.8774 5.50539 3.3524C5.50539 2.8274 5.93289 2.3999 6.45789 2.3999C6.98289 2.3999 7.41039 2.8274 7.41039 3.3524ZM3.00039 6.4549C3.00039 6.6499 3.15789 6.8074 3.35289 6.8074C3.54789 6.8074 3.70539 6.6499 3.70539 6.4549C3.70539 6.2599 3.54789 6.1024 3.35289 6.1024C3.15789 6.1024 3.00039 6.2599 3.00039 6.4549ZM3.35289 7.4074C2.82789 7.4074 2.40039 6.9799 2.40039 6.4549C2.40039 5.9299 2.82789 5.5024 3.35289 5.5024C3.87789 5.5024 4.30539 5.9299 4.30539 6.4549C4.30539 6.9799 3.87789 7.4074 3.35289 7.4074ZM6.45789 6.8074C6.65289 6.8074 6.81039 6.6499 6.81039 6.4549C6.81039 6.2599 6.65289 6.1024 6.45789 6.1024C6.26289 6.1024 6.10539 6.2599 6.10539 6.4549C6.10539 6.6499 6.26289 6.8074 6.45789 6.8074ZM7.41039 6.4549C7.41039 6.9799 6.98289 7.4074 6.45789 7.4074C5.93289 7.4074 5.50539 6.9799 5.50539 6.4549C5.50539 5.9299 5.93289 5.5024 6.45789 5.5024C6.98289 5.5024 7.41039 5.9299 7.41039 6.4549ZM3.00039 9.5449C3.00039 9.7399 3.15789 9.8974 3.35289 9.8974C3.54789 9.8974 3.70539 9.7399 3.70539 9.5449C3.70539 9.3499 3.54789 9.1924 3.35289 9.1924C3.15789 9.1924 3.00039 9.3499 3.00039 9.5449ZM3.35289 10.4974C2.82789 10.4974 2.40039 10.0699 2.40039 9.5449C2.40039 9.0199 2.82789 8.5924 3.35289 8.5924C3.87789 8.5924 4.30539 9.0199 4.30539 9.5449C4.30539 10.0699 3.87789 10.4974 3.35289 10.4974ZM6.45789 9.8974C6.65289 9.8974 6.81039 9.7399 6.81039 9.5449C6.81039 9.3499 6.65289 9.1924 6.45789 9.1924C6.26289 9.1924 6.10539 9.3499 6.10539 9.5449C6.10539 9.7399 6.26289 9.8974 6.45789 9.8974ZM7.41039 9.5449C7.41039 10.0699 6.98289 10.4974 6.45789 10.4974C5.93289 10.4974 5.50539 10.0699 5.50539 9.5449C5.50539 9.0199 5.93289 8.5924 6.45789 8.5924C6.98289 8.5924 7.41039 9.0199 7.41039 9.5449ZM3.00039 12.6474C3.00039 12.8424 3.15789 12.9999 3.35289 12.9999C3.54789 12.9999 3.70539 12.8424 3.70539 12.6474C3.70539 12.4524 3.54789 12.2949 3.35289 12.2949C3.15789 12.2949 3.00039 12.4524 3.00039 12.6474ZM3.35289 13.5999C2.82789 13.5999 2.40039 13.1724 2.40039 12.6474C2.40039 12.1224 2.82789 11.6949 3.35289 11.6949C3.87789 11.6949 4.30539 12.1224 4.30539 12.6474C4.30539 13.1724 3.87789 13.5999 3.35289 13.5999ZM6.45789 12.9999C6.65289 12.9999 6.81039 12.8424 6.81039 12.6474C6.81039 12.4524 6.65289 12.2949 6.45789 12.2949C6.26289 12.2949 6.10539 12.4524 6.10539 12.6474C6.10539 12.8424 6.26289 12.9999 6.45789 12.9999ZM7.41039 12.6474C7.41039 13.1724 6.98289 13.5999 6.45789 13.5999C5.93289 13.5999 5.50539 13.1724 5.50539 12.6474C5.50539 12.1224 5.93289 11.6949 6.45789 11.6949C6.98289 11.6949 7.41039 12.1224 7.41039 12.6474Z" fill="#525252"/>
+  <svg width="6" height="12" viewBox="0 0 6 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0.9525 1.305C1.1475 1.305 1.305 1.1475 1.305 0.9525C1.305 0.7575 1.1475 0.6 0.9525 0.6C0.7575 0.6 0.6 0.7575 0.6 0.9525C0.6 1.1475 0.7575 1.305 0.9525 1.305ZM1.905 0.9525C1.905 1.4775 1.4775 1.905 0.9525 1.905C0.4275 1.905 0 1.4775 0 0.9525C0 0.4275 0.4275 0 0.9525 0C1.4775 0 1.905 0.4275 1.905 0.9525ZM4.0575 1.305C4.2525 1.305 4.41 1.1475 4.41 0.9525C4.41 0.7575 4.2525 0.6 4.0575 0.6C3.8625 0.6 3.705 0.7575 3.705 0.9525C3.705 1.1475 3.8625 1.305 4.0575 1.305ZM5.01 0.9525C5.01 1.4775 4.5825 1.905 4.0575 1.905C3.5325 1.905 3.105 1.4775 3.105 0.9525C3.105 0.4275 3.5325 0 4.0575 0C4.5825 0 5.01 0.4275 5.01 0.9525ZM0.6 4.055C0.6 4.25 0.7575 4.4075 0.9525 4.4075C1.1475 4.4075 1.305 4.25 1.305 4.055C1.305 3.86 1.1475 3.7025 0.9525 3.7025C0.7575 3.7025 0.6 3.86 0.6 4.055ZM0.9525 5.0075C0.4275 5.0075 0 4.58 0 4.055C0 3.53 0.4275 3.1025 0.9525 3.1025C1.4775 3.1025 1.905 3.53 1.905 4.055C1.905 4.58 1.4775 5.0075 0.9525 5.0075ZM4.0575 4.4075C4.2525 4.4075 4.41 4.25 4.41 4.055C4.41 3.86 4.2525 3.7025 4.0575 3.7025C3.8625 3.7025 3.705 3.86 3.705 4.055C3.705 4.25 3.8625 4.4075 4.0575 4.4075ZM5.01 4.055C5.01 4.58 4.5825 5.0075 4.0575 5.0075C3.5325 5.0075 3.105 4.58 3.105 4.055C3.105 3.53 3.5325 3.1025 4.0575 3.1025C4.5825 3.1025 5.01 3.53 5.01 4.055ZM0.6 7.145C0.6 7.34 0.7575 7.4975 0.9525 7.4975C1.1475 7.4975 1.305 7.34 1.305 7.145C1.305 6.95 1.1475 6.7925 0.9525 6.7925C0.7575 6.7925 0.6 6.95 0.6 7.145ZM0.9525 8.0975C0.4275 8.0975 0 7.67 0 7.145C0 6.62 0.4275 6.1925 0.9525 6.1925C1.4775 6.1925 1.905 6.62 1.905 7.145C1.905 7.67 1.4775 8.0975 0.9525 8.0975ZM4.0575 7.4975C4.2525 7.4975 4.41 7.34 4.41 7.145C4.41 6.95 4.2525 6.7925 4.0575 6.7925C3.8625 6.7925 3.705 6.95 3.705 7.145C3.705 7.34 3.8625 7.4975 4.0575 7.4975ZM5.01 7.145C5.01 7.67 4.5825 8.0975 4.0575 8.0975C3.5325 8.0975 3.105 7.67 3.105 7.145C3.105 6.62 3.5325 6.1925 4.0575 6.1925C4.5825 6.1925 5.01 6.62 5.01 7.145ZM0.6 10.2475C0.6 10.4425 0.7575 10.6 0.9525 10.6C1.1475 10.6 1.305 10.4425 1.305 10.2475C1.305 10.0525 1.1475 9.895 0.9525 9.895C0.7575 9.895 0.6 10.0525 0.6 10.2475ZM0.9525 11.2C0.4275 11.2 0 10.7725 0 10.2475C0 9.7225 0.4275 9.295 0.9525 9.295C1.4775 9.295 1.905 9.7225 1.905 10.2475C1.905 10.7725 1.4775 11.2 0.9525 11.2ZM4.0575 10.6C4.2525 10.6 4.41 10.4425 4.41 10.2475C4.41 10.0525 4.2525 9.895 4.0575 9.895C3.8625 9.895 3.705 10.0525 3.705 10.2475C3.705 10.4425 3.8625 10.6 4.0575 10.6ZM5.01 10.2475C5.01 10.7725 4.5825 11.2 4.0575 11.2C3.5325 11.2 3.105 10.7725 3.105 10.2475C3.105 9.7225 3.5325 9.295 4.0575 9.295C4.5825 9.295 5.01 9.7225 5.01 10.2475Z" fill="#525252"/>
   </svg>
 );
 
-/* Mascot SVGs for each approval mode — from Figma assets */
-const IconMascotDefault = () => (
+/* Mascot SVG frames — color changes by approval mode, animates when working */
+const MASCOT_COLORS: Record<ApprovalMode, string> = {
+  'manual': '#737373',
+  'allow-session': '#FF809D',
+  'allow-all': '#FF1A4F',
+};
+
+const MascotFrame1 = ({ color }: { color: string }) => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12.6318 5.05273H10.1055V7.5791H12.6318V5.05273H15.1582V10.1055H12.6318V12.6318H7.5791V15.1582H5.05273V12.6318H2.52637V10.1055H0V5.05273H2.52637V2.52637H12.6318V5.05273ZM15.1582 15.1582H12.6318V12.6318H15.1582V15.1582ZM5.05273 7.5791H7.5791V5.05273H5.05273V7.5791ZM2.52637 2.52637H0V0H2.52637V2.52637Z" fill="#737373"/>
+    <path d="M12.6318 5.05273H10.1055V7.5791H12.6318V5.05273H15.1582V10.1055H12.6318V12.6318H7.5791V15.1582H5.05273V12.6318H2.52637V10.1055H0V5.05273H2.52637V2.52637H12.6318V5.05273ZM15.1582 15.1582H12.6318V12.6318H15.1582V15.1582ZM5.05273 7.5791H7.5791V5.05273H5.05273V7.5791ZM2.52637 2.52637H0V0H2.52637V2.52637Z" fill={color}/>
   </svg>
 );
 
-const IconMascotSection = () => (
+const MascotFrame2 = ({ color }: { color: string }) => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12.6318 5.05273H10.1055V7.5791H12.6318V5.05273H15.1582V10.1055H12.6318V12.6318H7.5791V15.1582H5.05273V12.6318H2.52637V10.1055H0V5.05273H2.52637V2.52637H12.6318V5.05273ZM15.1582 15.1582H12.6318V12.6318H15.1582V15.1582ZM5.05273 7.5791H7.5791V5.05273H5.05273V7.5791ZM2.52637 2.52637H0V0H2.52637V2.52637Z" fill="#FF809D"/>
+    <path d="M2.52637 15.1582H0V12.6318H2.52637V15.1582ZM12.6318 5.05273H10.1055V7.5791H12.6318V5.05273H15.1582V10.1055H12.6318V12.6318H7.5791V15.1582H5.05273V12.6318H2.52637V10.1055H0V5.05273H2.52637V2.52637H12.6318V5.05273ZM5.05273 7.5791H7.5791V5.05273H5.05273V7.5791ZM15.1582 2.52637H12.6318V0H15.1582V2.52637Z" fill={color}/>
   </svg>
 );
 
-const IconMascotFull = () => (
-  <svg width="18" height="16" viewBox="0 0 18 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12.6318 5.47363H10.1055V8H12.6318V5.47363H15.1582V10.5264H12.6318V13.0527H7.5791V15.5791H5.05273V13.0527H2.52637V10.5264H0V5.47363H2.52637V2.94727H12.6318V5.47363ZM15.1582 15.5791H12.6318V13.0527H15.1582V15.5791ZM5.05273 8H7.5791V5.47363H5.05273V8ZM2.52637 2.94727H0V0.420898H2.52637V2.94727Z" fill="#FF1A4F"/>
-    <path d="M7.57812 7.99334V5.47314H5.05793L7.57812 7.99334Z" fill="#FF1A4F"/>
-    <path d="M10.0567 7.99334V5.47314H12.5769L10.0567 7.99334Z" fill="#FF1A4F"/>
-  </svg>
-);
+const MascotButton = ({ mode, isWorking, onClick }: { mode: ApprovalMode; isWorking: boolean; onClick: () => void }) => {
+  const [frame, setFrame] = useState(0);
 
-const MascotButton = ({ mode, onClick }: { mode: ApprovalMode; onClick: () => void }) => {
+  useEffect(() => {
+    if (!isWorking) { setFrame(0); return; }
+    const id = setInterval(() => setFrame(f => (f + 1) % 2), 600);
+    return () => clearInterval(id);
+  }, [isWorking]);
+
   const titles: Record<ApprovalMode, string> = {
     'manual': 'Manual — pedir permissao para tudo',
     'allow-session': 'Accept edits — auto-aprova leitura/escrita',
     'allow-all': 'Bypass — auto-aprova tudo nesta sessao',
   };
+  const color = MASCOT_COLORS[mode];
   return (
     <button className="mascot-btn" onClick={onClick} title={titles[mode]}>
-      {mode === 'manual' && <IconMascotDefault />}
-      {mode === 'allow-session' && <IconMascotSection />}
-      {mode === 'allow-all' && <IconMascotFull />}
+      {frame === 0 ? <MascotFrame1 color={color} /> : <MascotFrame2 color={color} />}
     </button>
   );
 };
@@ -83,6 +88,7 @@ export function App() {
   const [animKey, setAnimKey] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     api.getState().then(setState);
@@ -99,6 +105,26 @@ export function App() {
   useEffect(() => {
     if (editingName) nameRef.current?.focus();
   }, [editingName]);
+
+  // Report actual content height to main process
+  useEffect(() => {
+    if (!barRef.current) return;
+    let lastH = 0;
+    const report = () => {
+      if (!barRef.current) return;
+      const h = barRef.current.scrollHeight;
+      if (h > 0 && h !== lastH) {
+        lastH = h;
+        api.reportContentHeight(h + 2); // +2 for border
+      }
+    };
+    const observer = new MutationObserver(report);
+    observer.observe(barRef.current, { childList: true, subtree: true, attributes: true, characterData: true });
+    const resizeObs = new ResizeObserver(report);
+    resizeObs.observe(barRef.current);
+    report();
+    return () => { observer.disconnect(); resizeObs.disconnect(); };
+  }, [animKey]);
 
   // Global shortcuts: Cmd+Enter = allow/submit, Cmd+Backspace = deny/skip
   useEffect(() => {
@@ -195,7 +221,7 @@ export function App() {
   const sessionLabel = activeSession?.name || activeSession?.cwd.split('/').pop() || '';
 
   return (
-    <div key={animKey} className="command-bar">
+    <div key={animKey} ref={barRef} className="command-bar">
       {hasPending ? (
         /* ===== Permission Card ===== */
         <div className="permission-bar">
@@ -203,7 +229,7 @@ export function App() {
           <div className="permission-header">
             <div className="drag-mascot-group">
               <div className="drag-handle"><IconGrid /></div>
-              <div className="permission-mascot"><IconMascotDefault /></div>
+              <div className="permission-mascot"><MascotFrame1 color={MASCOT_COLORS[currentMode]} /></div>
             </div>
             <div className="permission-title">
               <span className="dot" />
@@ -244,7 +270,7 @@ export function App() {
         <div className="input-row">
           <div className="drag-mascot-group">
             <div className="drag-handle"><IconGrid /></div>
-            <MascotButton mode={currentMode} onClick={cycleApprovalMode} />
+            <MascotButton mode={currentMode} isWorking={state.sessionStatus === 'working'} onClick={cycleApprovalMode} />
           </div>
 
           <button
@@ -255,7 +281,7 @@ export function App() {
             <IconClock />
           </button>
 
-          {state.sessions.length > 0 && (
+          {state.sessions.length > 0 ? (
             <>
               {editingName ? (
                 <input
@@ -279,33 +305,38 @@ export function App() {
                   </span>
                 </div>
               )}
+
+              <div className="input-wrap">
+                <input
+                  ref={inputRef}
+                  className="input-field"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Enviar para o Claude..."
+                  disabled={!state.activeSessionPid}
+                />
+              </div>
+
+              <button
+                className="btn-send"
+                onClick={handleSend}
+                disabled={!input.trim() || !state.activeSessionPid}
+              >
+                <IconSend />
+              </button>
             </>
+          ) : (
+            <button className="session-pill session-new-pill" onClick={() => api.newSession()}>
+              <span className="new-session-icon">+</span>
+              <span className="session-pill-label">Nova sessao</span>
+            </button>
           )}
-
-          <div className="input-wrap">
-            <input
-              ref={inputRef}
-              className="input-field"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={state.activeSessionPid ? 'Enviar para o Claude...' : 'Nenhuma sessao ativa'}
-              disabled={!state.activeSessionPid}
-            />
-          </div>
-
-          <button
-            className="btn-send"
-            onClick={handleSend}
-            disabled={!input.trim() || !state.activeSessionPid}
-          >
-            <IconSend />
-          </button>
         </div>
       )}
 
       {/* Session list */}
-      {sessionListOpen && sortedSessions.length > 0 && (
+      {sessionListOpen && (
         <div className="session-list">
           {sortedSessions.map((s) => (
             <button
@@ -323,6 +354,13 @@ export function App() {
               <span className="session-list-pid">PID {s.pid}</span>
             </button>
           ))}
+          <button
+            className="session-list-item session-new"
+            onClick={() => { api.newSession(); toggleSessionList(false); }}
+          >
+            <span className="new-session-icon">+</span>
+            <span className="session-list-name">Nova sessao</span>
+          </button>
         </div>
       )}
 

@@ -9,11 +9,7 @@ INPUT=$(cat)
 TOOL_NAME=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('toolName',''))" 2>/dev/null)
 
 if [ "$TOOL_NAME" != "AskUserQuestion" ]; then
-  # Not a question - let it pass, just notify
-  curl -s -X POST http://127.0.0.1:31415/event \
-    -H "Content-Type: application/json" \
-    -d "$INPUT" \
-    --connect-timeout 1 --max-time 2 2>/dev/null || true
+  # Not a question — exit silently, permission-gate.sh handles other tools
   exit 0
 fi
 

@@ -14,8 +14,8 @@ const POSITIONS: { label: string; value: OverlayPosition }[] = [
 ];
 
 export function createTray(onQuit: () => void, onPositionChange: () => void) {
-  const iconPath = path.join(__dirname, '../../assets/icon.png');
-  const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
+  const iconPath = path.join(__dirname, '../../assets/trayTemplate.png');
+  const icon = nativeImage.createFromPath(iconPath);
   icon.setTemplateImage(true);
   tray = new Tray(icon);
 
