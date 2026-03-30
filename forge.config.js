@@ -6,6 +6,15 @@ module.exports = {
     appBundleId: 'com.mateusdeve.claude-pop',
     asar: true,
     osxSign: {},
+    ...(process.env.APPLE_API_KEY_ID
+      ? {
+          osxNotarize: {
+            appleApiKey: process.env.APPLE_API_KEY_PATH,
+            appleApiKeyId: process.env.APPLE_API_KEY_ID,
+            appleApiIssuer: process.env.APPLE_API_ISSUER,
+          },
+        }
+      : {}),
     ignore: [
       /^\/src$/,
       /^\/tsconfig/,
