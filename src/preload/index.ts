@@ -13,6 +13,7 @@ const IPC = {
   QUESTION_SKIP: 'overlay:question-skip',
   SESSION_LIST_TOGGLE: 'overlay:session-list-toggle',
   PANEL_HEIGHT: 'overlay:panel-height',
+  SET_APPROVAL_MODE: 'overlay:set-approval-mode',
 } as const;
 
 const api = {
@@ -64,6 +65,10 @@ const api = {
 
   setPanelHeight(extraHeight: number) {
     ipcRenderer.send(IPC.PANEL_HEIGHT, extraHeight);
+  },
+
+  setApprovalMode(mode: string) {
+    ipcRenderer.send(IPC.SET_APPROVAL_MODE, mode);
   },
 };
 

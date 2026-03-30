@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import type { OverlayState, PermissionDecision, PendingQuestion, SessionStatus, OverlayEvent } from '../shared/types';
+import type { OverlayState, PermissionDecision, PendingQuestion, SessionStatus, OverlayEvent, ApprovalMode } from '../shared/types';
 
 const api = (window as any).overlayAPI;
 
@@ -12,6 +12,7 @@ export function App() {
     pendingQuestion: null,
     expanded: false,
     sessionStatus: 'unknown',
+    approvalMode: 'manual',
   });
   const [input, setInput] = useState('');
   const [editingName, setEditingName] = useState(false);
@@ -173,6 +174,23 @@ export function App() {
             )}
           </div>
         )}
+
+        <button
+          className={`btn-icon btn-approval ${state.approvalMode !== 'manual' ? 'active' : ''}`}
+          onClick={() => {
+            const modes: ApprovalMode[] = ['manual', 'allow-all', 'allow-session'];
+            const idx = modes.indexOf(state.approvalMode);
+            const next = modes[(idx + 1) % modes.length];
+            api.setApprovalMode(next);
+          }}
+          title={
+            state.approvalMode === 'manual' ? 'Manual — clique para aceitar tudo'
+            : state.approvalMode === 'allow-all' ? 'Aceitando tudo — clique para aceitar sessão'
+            : 'Aceitando sessão — clique para manual'
+          }
+        >
+          {state.approvalMode === 'manual' ? '\u{1F6E1}' : state.approvalMode === 'allow-all' ? '\u2705' : '\u{1F4CC}'}
+        </button>
 
         <button
           className={`btn-icon btn-history ${historyOpen ? 'active' : ''}`}

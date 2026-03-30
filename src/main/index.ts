@@ -21,6 +21,7 @@ const state: OverlayState = {
   expanded: false,
   sessionStatus: 'unknown',
   lastTool: undefined,
+  approvalMode: 'manual',
 };
 
 const BAR_WIDTH = 520;
@@ -232,6 +233,11 @@ function setupIPC() {
     resizeBar();
   });
 
+  ipcMain.on(IPC.SET_APPROVAL_MODE, (_e, mode: string) => {
+    state.approvalMode = mode as any;
+    sendState();
+  });
+
   ipcMain.on(IPC.QUESTION_SKIP, () => {
     if (state.pendingQuestion) {
       overlayServer.skipQuestion(state.pendingQuestion.id);
@@ -285,9 +291,24 @@ async function main() {
   });
 
   overlayServer.on('permission', ({ id, event }: { id: string; event: OverlayEvent }) => {
-    state.pendingPermission = { id, event };
     pushEvent(event);
-    notify('Permission needed', event.message || `${event.tool || 'Action'} requires approval`);
+
+    // Auto-approve based on mode
+    if (state.approvalMode === 'allow-all') {
+      overlayServer.respondPermission(id, { decision: 'allow' });
+      return;
+    }
+    if (state.approvalMode === 'allow-session' && event.sessionId) {
+      const active = state.sessions.find(s => s.pid === state.activeSessionPid);
+      if (active && active.sessionId === event.sessionId) {
+        overlayServer.respondPermission(id, { decision: 'allow' });
+        return;
+      }
+    }
+
+    // Manual mode — show in overlay
+    state.pendingPermission = { id, event };
+    notify('Permissão necessária', event.message || `${event.tool || 'Ação'} precisa de aprovação`);
     showBar();
     resizeBar();
   });

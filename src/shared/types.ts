@@ -58,6 +58,7 @@ export interface SessionMeta {
 }
 
 export type SessionStatus = 'idle' | 'working' | 'waiting' | 'unknown';
+export type ApprovalMode = 'manual' | 'allow-all' | 'allow-session';
 
 export interface OverlayState {
   sessions: ClaudeSession[];
@@ -68,6 +69,7 @@ export interface OverlayState {
   expanded: boolean;
   sessionStatus: SessionStatus;
   lastTool?: string;
+  approvalMode: ApprovalMode;
 }
 
 export const IPC = {
@@ -83,4 +85,5 @@ export const IPC = {
   QUESTION_SKIP: 'overlay:question-skip',
   SESSION_LIST_TOGGLE: 'overlay:session-list-toggle',
   PANEL_HEIGHT: 'overlay:panel-height',
+  SET_APPROVAL_MODE: 'overlay:set-approval-mode',
 } as const;

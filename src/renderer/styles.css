@@ -548,6 +548,18 @@
   padding-top: 2px;
 }
 
+/* ===== Approval Mode Button ===== */
+.btn-approval {
+  font-size: 13px;
+  -webkit-app-region: no-drag;
+  transition: all 0.25s var(--spring);
+}
+
+.btn-approval.active {
+  color: var(--green);
+  text-shadow: 0 0 8px var(--green-glow);
+}
+
 /* ===== History Button ===== */
 .btn-history {
   display: flex;
