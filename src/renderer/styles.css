@@ -66,66 +66,14 @@
   -webkit-app-region: no-drag;
 }
 
-.claude-icon-wrap {
-  flex-shrink: 0;
-  position: relative;
-  width: 28px;
-  height: 28px;
-}
-
-.claude-icon {
-  width: 24px;
-  height: 24px;
+.logo-lottie-wrap {
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s var(--spring);
-}
-
-.claude-icon:hover { transform: scale(1.1) rotate(-5deg); }
-
-.claude-icon svg {
-  filter: drop-shadow(0 0 8px var(--accent-glow));
-  transition: filter 0.3s;
-}
-
-.status-dot {
-  position: absolute;
-  bottom: -1px;
-  right: -1px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 2px solid rgba(16, 14, 20, 0.9);
-  transition: all 0.4s var(--spring);
-}
-
-.status-dot.status-working {
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-glow);
-  animation: spin-pulse 2s linear infinite;
-}
-
-.status-dot.status-waiting {
-  background: var(--yellow);
-  box-shadow: 0 0 8px var(--yellow-glow);
-  animation: breathe 2s ease-in-out infinite;
-}
-
-.status-dot.status-idle {
-  background: var(--green);
-  box-shadow: 0 0 8px var(--green-glow);
-}
-
-.status-dot.status-unknown {
-  background: var(--text-dim);
-  box-shadow: none;
-}
-
-@keyframes spin-pulse {
-  0% { transform: scale(1); box-shadow: 0 0 4px var(--accent-glow); }
-  50% { transform: scale(1.2); box-shadow: 0 0 12px var(--accent-glow); }
-  100% { transform: scale(1); box-shadow: 0 0 4px var(--accent-glow); }
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 @keyframes breathe {
