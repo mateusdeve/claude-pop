@@ -5,6 +5,31 @@ import type { SessionMeta } from '../shared/types';
 
 const STORE_DIR = join(homedir(), '.claude-overlay');
 const STORE_FILE = join(STORE_DIR, 'sessions.json');
+const CONFIG_FILE = join(STORE_DIR, 'config.json');
+
+export type OverlayPosition = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+
+interface OverlayConfig {
+  position: OverlayPosition;
+}
+
+const DEFAULT_CONFIG: OverlayConfig = { position: 'bottom-center' };
+
+export function getConfig(): OverlayConfig {
+  try {
+    if (existsSync(CONFIG_FILE)) {
+      return { ...DEFAULT_CONFIG, ...JSON.parse(readFileSync(CONFIG_FILE, 'utf-8')) };
+    }
+  } catch {}
+  return { ...DEFAULT_CONFIG };
+}
+
+export function setPosition(position: OverlayPosition) {
+  if (!existsSync(STORE_DIR)) mkdirSync(STORE_DIR, { recursive: true });
+  const config = getConfig();
+  config.position = position;
+  writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+}
 
 // Key is sessionId (from Claude) or cwd as fallback
 type SessionStore = Record<string, SessionMeta>;

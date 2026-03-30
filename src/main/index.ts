@@ -4,7 +4,7 @@ import { OverlayServer } from './server';
 import { SessionManager } from './sessions';
 import { sendTextToSession } from './responder';
 import { createTray } from './tray';
-import { getSessionMeta, setSessionName, toggleFavorite } from './store';
+import { getSessionMeta, setSessionName, toggleFavorite, getConfig, setPosition, type OverlayPosition } from './store';
 import type { OverlayState, PermissionDecision, OverlayEvent, ClaudeSession } from '../shared/types';
 import { IPC } from '../shared/types';
 
@@ -77,26 +77,38 @@ function getContentHeight(): number {
     : BAR_HEIGHT_NORMAL + sessionListHeight;
 }
 
-let userHasRepositioned = false;
+function positionBar() {
+  if (!mainWindow) return;
+  const h = getContentHeight();
+  const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
+  const pos = getConfig().position;
+  const margin = MARGIN_BOTTOM;
+
+  let x: number, y: number;
+  switch (pos) {
+    case 'top-left':     x = margin; y = margin; break;
+    case 'top-center':   x = Math.round(sw / 2 - BAR_WIDTH / 2); y = margin; break;
+    case 'top-right':    x = sw - BAR_WIDTH - margin; y = margin; break;
+    case 'bottom-left':  x = margin; y = sh - h - margin; break;
+    case 'bottom-right': x = sw - BAR_WIDTH - margin; y = sh - h - margin; break;
+    case 'bottom-center':
+    default:             x = Math.round(sw / 2 - BAR_WIDTH / 2); y = sh - h - margin; break;
+  }
+
+  mainWindow.setMinimumSize(BAR_WIDTH, h);
+  mainWindow.setSize(BAR_WIDTH, h);
+  mainWindow.setPosition(x, y);
+}
 
 function resizeBar() {
   if (!mainWindow || !state.expanded) return;
-  const h = getContentHeight();
-  mainWindow.setMinimumSize(BAR_WIDTH, h);
-  mainWindow.setSize(BAR_WIDTH, h);
-  if (!userHasRepositioned) {
-    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
-    mainWindow.setPosition(
-      Math.round(screenWidth / 2 - BAR_WIDTH / 2),
-      screenHeight - h - MARGIN_BOTTOM
-    );
-  }
+  positionBar();
 }
 
 function showBar() {
   if (!mainWindow) return;
   state.expanded = true;
-  resizeBar();
+  positionBar();
   mainWindow.show();
   mainWindow.focus();
   sendState();
@@ -135,10 +147,6 @@ function createWindow() {
 
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   mainWindow.setBackgroundColor('#00000000');
-
-  mainWindow.on('moved', () => {
-    userHasRepositioned = true;
-  });
 
   mainWindow.loadFile(join(__dirname, '..', 'renderer', 'index.html'));
 
@@ -289,9 +297,10 @@ async function main() {
     resizeBar();
   });
 
-  createTray(() => {
-    sessionManager.stop();
-  });
+  createTray(
+    () => { sessionManager.stop(); },
+    () => { if (state.expanded) positionBar(); }
+  );
 
   console.log('Claude Overlay ready. Press Ctrl+J to toggle.');
 }
