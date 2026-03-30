@@ -1,5 +1,5 @@
 {
-  "name": "claude-overlay",
+  "name": "claude-pop",
   "version": "0.1.0",
   "description": "Floating macOS overlay for Claude Code — permissions, questions, session switching, and text input from a global hotkey",
   "main": "dist/main/index.js",
