@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Pop — Overlay para Claude Code</title>
+  <meta name="description" content="Controle o Claude Code de qualquer lugar. Permissões, perguntas e sessões num overlay flutuante com um atalho global.">
+  <meta property="og:title" content="Claude Pop">
+  <meta property="og:description" content="Overlay flutuante para Claude Code. Baixe grátis.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0812;
+      --surface: rgba(255,255,255,0.03);
+      --border: rgba(255,255,255,0.06);
+      --accent: #e8734a;
+      --accent-glow: rgba(232,115,74,0.25);
+      --purple: #8b5cf6;
+      --green: #34d399;
+      --text: rgba(255,255,255,0.92);
+      --text-sub: rgba(255,255,255,0.5);
+      --text-dim: rgba(255,255,255,0.2);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== Background ===== */
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-glow::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(232,115,74,0.08) 0%, transparent 70%);
+    }
+
+    .bg-glow::after {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      left: 30%;
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%);
+    }
+
+    /* ===== Hero ===== */
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-sub);
+      margin-bottom: 32px;
+      animation: fade-up 0.6s ease-out;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px rgba(52,211,153,0.4);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .logo-wrap {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 32px;
+      animation: fade-up 0.7s ease-out;
+      filter: drop-shadow(0 20px 40px rgba(232,115,74,0.2));
+    }
+
+    .logo-wrap img {
+      width: 100%;
+      height: 100%;
+    }
+
+    h1 {
+      font-size: clamp(48px, 8vw, 80px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 16px;
+      animation: fade-up 0.8s ease-out;
+    }
+
+    h1 .accent { color: var(--accent); }
+
+    .subtitle {
+      font-size: clamp(18px, 3vw, 22px);
+      font-weight: 400;
+      color: var(--text-sub);
+      max-width: 520px;
+      line-height: 1.5;
+      margin-bottom: 48px;
+      animation: fade-up 0.9s ease-out;
+    }
+
+    .subtitle strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ===== Download Buttons ===== */
+    .downloads {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fade-up 1s ease-out;
+      margin-bottom: 48px;
+    }
+
+    .dl-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+      border: none;
+    }
+
+    .dl-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .dl-btn:active {
+      transform: scale(0.97);
+    }
+
+    .dl-btn-primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 20px var(--accent-glow), 0 0 0 1px rgba(232,115,74,0.3);
+    }
+
+    .dl-btn-primary:hover {
+      box-shadow: 0 8px 32px var(--accent-glow), 0 0 0 1px rgba(232,115,74,0.5);
+    }
+
+    .dl-btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .dl-btn-secondary:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    .dl-icon {
+      width: 20px;
+      height: 20px;
+      opacity: 0.9;
+    }
+
+    /* ===== Features chips ===== */
+    .features {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 600px;
+      animation: fade-up 1.1s ease-out;
+      margin-bottom: 56px;
+    }
+
+    .chip {
+      padding: 6px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-sub);
+      white-space: nowrap;
+    }
+
+    /* ===== Shortcut hint ===== */
+    .shortcut {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--text-dim);
+      animation: fade-up 1.2s ease-out;
+    }
+
+    kbd {
+      padding: 3px 8px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'SF Mono', 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    /* ===== Footer ===== */
+    .footer {
+      position: relative;
+      z-index: 1;
+      padding: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .footer a {
+      color: var(--text-sub);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer a:hover { color: var(--accent); }
+
+    /* ===== Animations ===== */
+    @keyframes fade-up {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 640px) {
+      .downloads { flex-direction: column; align-items: center; }
+      .dl-btn { width: 100%; max-width: 300px; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <section class="hero">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      Open Source &middot; MIT License
+    </div>
+
+    <div class="logo-wrap">
+      <img src="https://raw.githubusercontent.com/mateusdeve/claude-pop/main/assets/logo.svg" alt="Claude Pop">
+    </div>
+
+    <h1>Claude <span class="accent">Pop</span></h1>
+
+    <p class="subtitle">
+      Controle o <strong>Claude Code</strong> de qualquer lugar.<br>
+      Permissões, perguntas e sessões num overlay flutuante.
+    </p>
+
+    <div class="downloads">
+      <a class="dl-btn dl-btn-primary" href="https://github.com/mateusdeve/claude-pop/releases/latest" id="dl-mac">
+        <svg class="dl-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        macOS
+      </a>
+      <a class="dl-btn dl-btn-secondary" href="https://github.com/mateusdeve/claude-pop/releases/latest" id="dl-win">
+        <svg class="dl-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l8-1.25v6.5H3zm0 .5h8v6.5l-8-1.25V12.5zM11.5 5.38l9.5-1.63v8.25h-9.5V5.38zm0 7.12h9.5v8.25l-9.5-1.63V12.5z"/></svg>
+        Windows
+      </a>
+      <a class="dl-btn dl-btn-secondary" href="https://github.com/mateusdeve/claude-pop/releases/latest" id="dl-linux">
+        <svg class="dl-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.368 1.884 1.368.39 0 .739-.134 1.107-.534.117-.134.241-.2.371-.334.218-.2.467-.4.6-.868.012-.063.024-.158.035-.27.327-.066.667-.25.88-.466.413-.466.27-.9.527-1.334a.96.96 0 00.067-.132c.001 0 .003-.002.003-.002.048-.087.086-.169.123-.25.403-.732.416-1.396-.184-2.277-.6-.468-1.218-.667-1.413-.066-.195.6-.195 1.204.4 1.404.4.133.33.267.05.334-.278.066-.547.267-.547.533 0 .068.2.135.5.203-.3.067-.5.267-.5.467 0 .267.3.5.7.5.267 0 .5-.133.6-.267.1.067.2.134.3.267-.2.2-.5.334-.9.334-.5 0-.9-.267-1.1-.534-.416.267-.83.534-1.33.534-.5 0-1-.267-1.3-.534 0 0-.1.267-.3.534-.5.667-1.5.934-2.5.534-.7-.267-1-.934-1-1.534 0-.4.2-.8.4-1.067 0 0-.3-.133-.6-.4-.3-.267-.5-.6-.6-.934-.1-.333-.1-.667 0-.867.1-.2.3-.333.5-.4-.2-.4-.3-.868-.2-1.333.1-.467.4-.934.9-1.334.5-.4 1.1-.6 1.6-.534-.1-.133-.1-.266-.1-.4 0-.6.3-1.067.7-1.334-.2-.266-.4-.533-.5-.8-.2-.4-.3-.866-.3-1.333s.1-.867.3-1.267c.3-.5.7-.934 1.1-1.2.5-.4 1-.6 1.5-.667.6-.067 1.2.067 1.7.267.5-.533 1.1-.867 1.8-1 .7-.133 1.4 0 2 .4.7.4 1.2 1.067 1.4 1.867.1.333.1.667.1 1-.3-.133-.6-.133-.9-.067-.4.067-.7.267-.9.534-.3.4-.3.866-.1 1.266.1.267.3.467.5.6.1-.4.3-.667.6-.867.3-.133.7-.2 1-.067-.3-.667-.9-1.133-1.6-1.333-.4-.134-.8-.134-1.2-.067-.4.067-.7.267-1 .534.2.4.3.866.3 1.333s-.1.934-.3 1.334c-.2.266-.4.533-.6.733.3.133.6.333.8.6.3.333.4.733.4 1.133 0 .133 0 .267-.1.4.5-.067 1.1.133 1.6.534.5.4.8.866.9 1.333.1.467 0 .934-.2 1.334.2.066.4.2.5.4.1.2.1.533 0 .866-.1.334-.3.667-.6.934-.3.267-.6.4-.6.4.2.267.4.667.4 1.067 0 .6-.3 1.267-1 1.534-1 .4-2 .133-2.5-.534-.2-.267-.3-.534-.3-.534-.3.267-.8.534-1.3.534-.5 0-.914-.267-1.33-.534-.2.267-.6.534-1.1.534-.4 0-.7-.134-.9-.334.1-.133.2-.2.3-.267.1.134.333.267.6.267.4 0 .7-.233.7-.5 0-.2-.2-.4-.5-.467.3-.068.5-.135.5-.203 0-.266-.269-.467-.547-.533-.28-.067-.35-.201.05-.334.595-.2.6-.666 0-1.134-.184-.134-.25-.4-.184-.667z"/></svg>
+        Linux
+      </a>
+    </div>
+
+    <div class="features">
+      <span class="chip">Cmd+J para abrir</span>
+      <span class="chip">Aprovar permissões</span>
+      <span class="chip">Responder perguntas</span>
+      <span class="chip">Trocar sessões</span>
+      <span class="chip">Mascote animado</span>
+      <span class="chip">Aceitar tudo</span>
+      <span class="chip">Histórico</span>
+      <span class="chip">Notificações nativas</span>
+    </div>
+
+    <div class="shortcut">
+      Ative de qualquer lugar com <kbd>⌘</kbd> <kbd>J</kbd>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <a href="https://github.com/mateusdeve/claude-pop">GitHub</a> &middot;
+    MIT License &middot;
+    Feito por <a href="https://github.com/mateusdeve">@mateusdeve</a>
+  </footer>
+
+  <script>
+    // Auto-detect OS and highlight the right button
+    const ua = navigator.userAgent.toLowerCase();
+    let primary = 'dl-mac';
+    if (ua.includes('win')) primary = 'dl-win';
+    else if (ua.includes('linux')) primary = 'dl-linux';
+
+    document.querySelectorAll('.dl-btn').forEach(btn => {
+      if (btn.id === primary) {
+        btn.classList.remove('dl-btn-secondary');
+        btn.classList.add('dl-btn-primary');
+      } else {
+        btn.classList.remove('dl-btn-primary');
+        btn.classList.add('dl-btn-secondary');
+      }
+    });
+  </script>
+</body>
+</html>
