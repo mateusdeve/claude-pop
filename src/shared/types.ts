@@ -25,6 +25,7 @@ export interface OverlayEvent {
   sessionId?: string;
   tool?: string;
   message?: string;
+  description?: string;
   raw: Record<string, unknown>;
   timestamp: number;
 }
@@ -70,6 +71,8 @@ export interface OverlayState {
   sessionStatus: SessionStatus;
   lastTool?: string;
   approvalMode: ApprovalMode;
+  /** Per-session approval modes keyed by sessionId */
+  sessionApprovalModes: Record<string, ApprovalMode>;
 }
 
 export const IPC = {

@@ -22,13 +22,20 @@ const state: OverlayState = {
   sessionStatus: 'unknown',
   lastTool: undefined,
   approvalMode: 'manual',
+  sessionApprovalModes: {},
 };
 
+/** Get approval mode for a specific session (falls back to 'manual') */
+function getSessionMode(sessionId?: string): string {
+  if (!sessionId) return 'manual';
+  return state.sessionApprovalModes[sessionId] || 'manual';
+}
+
 const BAR_WIDTH = 520;
-const BAR_HEIGHT_NORMAL = 54;
-const BAR_HEIGHT_PERMISSION = 100;
-const BAR_HEIGHT_QUESTION = 320;
-const BAR_HEIGHT_QUESTION_TEXT = 150;
+const BAR_HEIGHT_NORMAL = 48;
+const BAR_HEIGHT_PERMISSION = 118;
+const BAR_HEIGHT_QUESTION = 310;
+const BAR_HEIGHT_QUESTION_TEXT = 144;
 const BAR_HEIGHT_SESSION_ITEM = 40;
 const BAR_HEIGHT_SESSION_PAD = 14;
 const MARGIN_BOTTOM = 40;
@@ -233,8 +240,22 @@ function setupIPC() {
     resizeBar();
   });
 
-  ipcMain.on(IPC.SET_APPROVAL_MODE, (_e, mode: string) => {
+  ipcMain.on(IPC.SET_APPROVAL_MODE, (_e, { sessionId, mode }: { sessionId: string; mode: string }) => {
+    // Store per-session mode
+    state.sessionApprovalModes[sessionId] = mode as any;
+    // Also update global for backward compat
     state.approvalMode = mode as any;
+
+    // Auto-resolve pending permission if switching to bypass mode for that session
+    if (state.pendingPermission) {
+      const pendingSid = state.pendingPermission.event.sessionId;
+      if (pendingSid === sessionId && mode === 'allow-all') {
+        overlayServer.respondPermission(state.pendingPermission.id, { decision: 'allow' });
+        state.pendingPermission = null;
+        resizeBar();
+      }
+    }
+
     sendState();
   });
 
@@ -281,6 +302,11 @@ async function main() {
   await overlayServer.start();
 
   overlayServer.on('event', (event: OverlayEvent) => {
+    // Tag event with session pid (don't switch active session)
+    if (event.sessionId) {
+      const match = state.sessions.find(s => s.sessionId === event.sessionId);
+      if (match) event.sessionPid = match.pid;
+    }
     pushEvent(event);
     if (event.type === 'idle_prompt') {
       notify('Claude idle', 'Claude is waiting for input');
@@ -291,16 +317,26 @@ async function main() {
   });
 
   overlayServer.on('permission', ({ id, event }: { id: string; event: OverlayEvent }) => {
+    // Tag event with session pid (don't switch active session)
+    if (event.sessionId) {
+      const match = state.sessions.find(s => s.sessionId === event.sessionId);
+      if (match) event.sessionPid = match.pid;
+    }
+
     pushEvent(event);
 
-    // Auto-approve based on mode
-    if (state.approvalMode === 'allow-all') {
+    // Check THIS SESSION's approval mode
+    const mode = getSessionMode(event.sessionId);
+
+    if (mode === 'allow-all') {
       overlayServer.respondPermission(id, { decision: 'allow' });
       return;
     }
-    if (state.approvalMode === 'allow-session' && event.sessionId) {
-      const active = state.sessions.find(s => s.pid === state.activeSessionPid);
-      if (active && active.sessionId === event.sessionId) {
+    if (mode === 'allow-session') {
+      // allow-session: auto-approve edits (Read, Write, Edit, Glob, Grep)
+      const editTools = ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Ler arquivo', 'Escrever arquivo', 'Editar arquivo', 'Buscar arquivos', 'Buscar conteúdo'];
+      const rawToolName = event.raw.toolName as string | undefined;
+      if (rawToolName && editTools.includes(rawToolName)) {
         overlayServer.respondPermission(id, { decision: 'allow' });
         return;
       }
@@ -314,6 +350,12 @@ async function main() {
   });
 
   overlayServer.on('question', ({ id, event, toolInput }: { id: string; event: OverlayEvent; toolInput: Record<string, unknown> }) => {
+    // Tag event with session pid (don't switch active session)
+    if (event.sessionId) {
+      const match = state.sessions.find(s => s.sessionId === event.sessionId);
+      if (match) event.sessionPid = match.pid;
+    }
+
     const question = (toolInput.question as string) || event.message || 'Claude needs input';
     const options = ((toolInput.options as any[]) || []).map((o: any) => ({
       label: typeof o === 'string' ? o : o.label || '',

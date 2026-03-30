@@ -60,9 +60,10 @@ export class OverlayServer extends EventEmitter {
   private buildEvent(raw: Record<string, unknown>): OverlayEvent {
     const toolInput = raw.toolInput as Record<string, unknown> | undefined;
     const toolName = raw.toolName as string | undefined;
-    const sessionId = raw.sessionId as string | undefined;
+    const sessionId = (raw.sessionId || raw.session_id) as string | undefined;
 
     let message = '';
+    let description = '';
     const label = toolName ? this.toolLabel(toolName) : '';
 
     if (toolInput) {
@@ -71,17 +72,49 @@ export class OverlayServer extends EventEmitter {
       const question = toolInput.question as string | undefined;
       const pattern = toolInput.pattern as string | undefined;
       const content = toolInput.content as string | undefined;
-      const description = toolInput.description as string | undefined;
+      const desc = toolInput.description as string | undefined;
+      const oldStr = toolInput.old_string as string | undefined;
+      const newStr = toolInput.new_string as string | undefined;
+      const url = toolInput.url as string | undefined;
+      const prompt = toolInput.prompt as string | undefined;
 
+      // Build a short summary for the event list
       if (question) message = question;
       else if (cmd) message = cmd.split('\n')[0].slice(0, 100);
       else if (filePath) message = filePath;
       else if (pattern) message = pattern;
-      else if (description) message = description;
+      else if (desc) message = desc;
       else if (content) message = content.split('\n')[0].slice(0, 80);
+
+      // Build a detailed description for the permission card
+      if (toolName === 'Bash' && cmd) {
+        description = `Executar comando: ${cmd.slice(0, 200)}`;
+      } else if (toolName === 'Write' && filePath) {
+        description = `Criar/sobrescrever arquivo: ${filePath}`;
+      } else if (toolName === 'Edit' && filePath) {
+        const preview = oldStr ? oldStr.split('\n')[0].slice(0, 60) : '';
+        description = `Editar ${filePath}${preview ? ` — "${preview}..."` : ''}`;
+      } else if (toolName === 'Read' && filePath) {
+        description = `Ler arquivo: ${filePath}`;
+      } else if (toolName === 'Glob' && pattern) {
+        description = `Buscar arquivos: ${pattern}`;
+      } else if (toolName === 'Grep' && pattern) {
+        description = `Buscar "${pattern}" nos arquivos`;
+      } else if (toolName === 'WebFetch' && url) {
+        description = `Acessar URL: ${url}`;
+      } else if (toolName === 'WebSearch' && prompt) {
+        description = `Pesquisar: ${prompt}`;
+      } else if (toolName === 'Agent' && prompt) {
+        description = `Sub-agente: ${prompt.slice(0, 150)}`;
+      } else if (desc) {
+        description = desc;
+      } else if (message) {
+        description = message;
+      }
     }
 
     if (!message && label) message = label;
+    if (!description) description = message || label || 'Acao solicitada';
 
     return {
       id: randomUUID(),
@@ -89,6 +122,7 @@ export class OverlayServer extends EventEmitter {
       sessionId,
       tool: label || toolName,
       message,
+      description,
       raw,
       timestamp: Date.now(),
     };

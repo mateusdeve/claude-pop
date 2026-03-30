@@ -67,8 +67,8 @@ const api = {
     ipcRenderer.send(IPC.PANEL_HEIGHT, extraHeight);
   },
 
-  setApprovalMode(mode: string) {
-    ipcRenderer.send(IPC.SET_APPROVAL_MODE, mode);
+  setApprovalMode(sessionId: string, mode: string) {
+    ipcRenderer.send(IPC.SET_APPROVAL_MODE, { sessionId, mode });
   },
 };
 
