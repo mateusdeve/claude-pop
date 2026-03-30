@@ -14,6 +14,7 @@ module.exports = {
     ],
   },
   makers: [
+    // macOS
     {
       name: '@electron-forge/maker-dmg',
       config: {
@@ -21,9 +22,45 @@ module.exports = {
         format: 'ULFO',
       },
     },
+    // macOS + Linux zip
     {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin', 'linux'],
+    },
+    // Windows (.exe installer)
+    {
+      name: '@electron-forge/maker-squirrel',
+      config: {
+        name: 'ClaudePop',
+        setupExe: 'Claude Pop Setup.exe',
+        setupIcon: './assets/icon.ico',
+      },
+    },
+    // Linux .deb (Ubuntu/Debian)
+    {
+      name: '@electron-forge/maker-deb',
+      config: {
+        options: {
+          name: 'claude-pop',
+          productName: 'Claude Pop',
+          genericName: 'Claude Code Overlay',
+          description: 'Floating overlay for Claude Code — permissions, questions, session switching from a global hotkey',
+          categories: ['Development', 'Utility'],
+          icon: './assets/icon.png',
+        },
+      },
+    },
+    // Linux .rpm (Fedora/RHEL)
+    {
+      name: '@electron-forge/maker-rpm',
+      config: {
+        options: {
+          name: 'claude-pop',
+          productName: 'Claude Pop',
+          description: 'Floating overlay for Claude Code',
+          icon: './assets/icon.png',
+        },
+      },
     },
   ],
 };
