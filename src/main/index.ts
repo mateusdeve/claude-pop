@@ -175,7 +175,8 @@ function setupIPC() {
       overlayServer.respondPermission(state.pendingPermission.id, decision);
       state.pendingPermission = null;
       state.sessionStatus = 'working';
-      hideBar();
+      resizeBar();
+      sendState();
     }
   });
 
@@ -215,7 +216,8 @@ function setupIPC() {
     if (state.pendingQuestion) {
       overlayServer.respondQuestion(state.pendingQuestion.id, answer);
       state.pendingQuestion = null;
-      hideBar();
+      resizeBar();
+      sendState();
     }
   });
 
@@ -234,7 +236,8 @@ function setupIPC() {
     if (state.pendingQuestion) {
       overlayServer.skipQuestion(state.pendingQuestion.id);
       state.pendingQuestion = null;
-      hideBar();
+      resizeBar();
+      sendState();
     }
   });
 }
