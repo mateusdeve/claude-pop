@@ -34,6 +34,7 @@ const MARGIN_BOTTOM = 40;
 
 let sessionListOpen = false;
 let sessionListCount = 0;
+let extraPanelHeight = 0;
 
 function sendState() {
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -73,8 +74,9 @@ function getContentHeight(): number {
   if (state.pendingQuestion) {
     return state.pendingQuestion.options.length > 0 ? BAR_HEIGHT_QUESTION : BAR_HEIGHT_QUESTION_TEXT;
   }
-  return state.pendingPermission ? BAR_HEIGHT_PERMISSION + sessionListHeight
+  const base = state.pendingPermission ? BAR_HEIGHT_PERMISSION + sessionListHeight
     : BAR_HEIGHT_NORMAL + sessionListHeight;
+  return base + extraPanelHeight;
 }
 
 function positionBar() {
@@ -220,6 +222,11 @@ function setupIPC() {
   ipcMain.on(IPC.SESSION_LIST_TOGGLE, (_e, { open, count }: { open: boolean; count: number }) => {
     sessionListOpen = open;
     sessionListCount = count;
+    resizeBar();
+  });
+
+  ipcMain.on(IPC.PANEL_HEIGHT, (_e, height: number) => {
+    extraPanelHeight = height;
     resizeBar();
   });
 

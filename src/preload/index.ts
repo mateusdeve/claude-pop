@@ -12,6 +12,7 @@ const IPC = {
   QUESTION_RESPOND: 'overlay:question-respond',
   QUESTION_SKIP: 'overlay:question-skip',
   SESSION_LIST_TOGGLE: 'overlay:session-list-toggle',
+  PANEL_HEIGHT: 'overlay:panel-height',
 } as const;
 
 const api = {
@@ -59,6 +60,10 @@ const api = {
 
   toggleSessionList(open: boolean, count: number) {
     ipcRenderer.send(IPC.SESSION_LIST_TOGGLE, { open, count });
+  },
+
+  setPanelHeight(extraHeight: number) {
+    ipcRenderer.send(IPC.PANEL_HEIGHT, extraHeight);
   },
 };
 

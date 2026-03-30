@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import type { OverlayState, PermissionDecision, PendingQuestion, SessionStatus } from '../shared/types';
+import type { OverlayState, PermissionDecision, PendingQuestion, SessionStatus, OverlayEvent } from '../shared/types';
 
 const api = (window as any).overlayAPI;
 
@@ -95,11 +95,23 @@ export function App() {
   });
 
   const [sessionListOpen, setSessionListOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const toggleSessionList = (open?: boolean) => {
     const next = open !== undefined ? open : !sessionListOpen;
     setSessionListOpen(next);
+    if (next) setHistoryOpen(false);
     api.toggleSessionList(next, state.sessions.length);
+  };
+
+  const toggleHistory = () => {
+    const next = !historyOpen;
+    setHistoryOpen(next);
+    if (next) {
+      setSessionListOpen(false);
+      api.toggleSessionList(false, 0);
+    }
+    api.setPanelHeight(next ? 240 : 0);
   };
 
   const hasPending = !!state.pendingPermission;
@@ -163,6 +175,17 @@ export function App() {
         )}
 
         <button
+          className={`btn-icon btn-history ${historyOpen ? 'active' : ''}`}
+          onClick={toggleHistory}
+          title="Histórico"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+        </button>
+
+        <button
           className="btn-send"
           onClick={handleSend}
           disabled={!input.trim() || !state.activeSessionPid}
@@ -214,10 +237,55 @@ export function App() {
         </div>
       )}
 
+      {/* History panel */}
+      {historyOpen && (
+        <HistoryPanel events={state.events} />
+      )}
+
       {/* Question dialog - multi-select / single-select */}
       {state.pendingQuestion && (
         <QuestionPanel question={state.pendingQuestion} />
       )}
+    </div>
+  );
+}
+
+function timeAgo(ts: number): string {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 5) return 'agora';
+  if (diff < 60) return `${diff}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}min`;
+  return `${Math.floor(diff / 3600)}h`;
+}
+
+const EVENT_ICONS: Record<string, string> = {
+  tool_use: '\u2699',        // ⚙
+  permission_prompt: '\u26A0', // ⚠
+  elicitation_dialog: '\u2753', // ❓
+  idle_prompt: '\u23F8',      // ⏸
+  notification: '\u2139',     // ℹ
+  unknown: '\u2022',          // •
+};
+
+function HistoryPanel({ events }: { events: OverlayEvent[] }) {
+  if (events.length === 0) {
+    return (
+      <div className="history-panel">
+        <div className="history-empty">Nenhum evento ainda</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="history-panel">
+      {events.slice(0, 20).map((ev) => (
+        <div key={ev.id} className={`history-item history-${ev.type}`}>
+          <span className="history-icon">{EVENT_ICONS[ev.type] || '\u2022'}</span>
+          <span className="history-tool">{ev.tool || ev.type}</span>
+          <span className="history-msg">{ev.message}</span>
+          <span className="history-time">{timeAgo(ev.timestamp)}</span>
+        </div>
+      ))}
     </div>
   );
 }

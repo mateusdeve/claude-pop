@@ -82,4 +82,5 @@ export const IPC = {
   QUESTION_RESPOND: 'overlay:question-respond',
   QUESTION_SKIP: 'overlay:question-skip',
   SESSION_LIST_TOGGLE: 'overlay:session-list-toggle',
+  PANEL_HEIGHT: 'overlay:panel-height',
 } as const;
