@@ -26,7 +26,7 @@ A floating macOS overlay for [Claude Code](https://docs.anthropic.com/en/docs/cl
 
 ```bash
 # Clone the repo
-git clone https://github.com/mateuspires/claude-overlay.git
+git clone https://github.com/mateusdeve/claude-pop.git
 cd claude-overlay
 
 # Install dependencies
