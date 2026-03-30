@@ -40,27 +40,55 @@ export class OverlayServer extends EventEmitter {
     return 'unknown';
   }
 
+  private toolLabel(name: string): string {
+    const labels: Record<string, string> = {
+      Bash: 'Comando',
+      Read: 'Ler arquivo',
+      Write: 'Escrever arquivo',
+      Edit: 'Editar arquivo',
+      Glob: 'Buscar arquivos',
+      Grep: 'Buscar conteúdo',
+      WebFetch: 'Acessar URL',
+      WebSearch: 'Pesquisar web',
+      Agent: 'Sub-agente',
+      AskUserQuestion: 'Pergunta',
+      NotebookEdit: 'Editar notebook',
+    };
+    return labels[name] || name;
+  }
+
   private buildEvent(raw: Record<string, unknown>): OverlayEvent {
     const toolInput = raw.toolInput as Record<string, unknown> | undefined;
     const toolName = raw.toolName as string | undefined;
     const sessionId = raw.sessionId as string | undefined;
 
-    let message = toolName ? `Tool: ${toolName}` : '';
+    let message = '';
+    const label = toolName ? this.toolLabel(toolName) : '';
+
     if (toolInput) {
       const cmd = toolInput.command as string | undefined;
       const filePath = toolInput.file_path as string | undefined;
       const question = toolInput.question as string | undefined;
+      const pattern = toolInput.pattern as string | undefined;
+      const content = toolInput.content as string | undefined;
+      const description = toolInput.description as string | undefined;
+
       if (question) message = question;
-      else if (cmd) message += ` - ${cmd.slice(0, 120)}`;
-      else if (filePath) message += ` - ${filePath}`;
+      else if (cmd) message = cmd.split('\n')[0].slice(0, 100);
+      else if (filePath) message = filePath;
+      else if (pattern) message = pattern;
+      else if (description) message = description;
+      else if (content) message = content.split('\n')[0].slice(0, 80);
     }
+
+    if (!message && label) message = label;
 
     return {
       id: randomUUID(),
       type: this.parseEventType(raw),
       sessionId,
-      tool: toolName,
-      message: message || JSON.stringify(raw).slice(0, 200),
+      tool: label || toolName,
+      message,
       raw,
       timestamp: Date.now(),
     };

@@ -36,6 +36,32 @@ export function App() {
     if (editingName) nameRef.current?.focus();
   }, [editingName]);
 
+  // Global shortcuts: Cmd+Enter = allow/submit, Cmd+Backspace = deny/skip
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (!e.metaKey) return;
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (state.pendingPermission) {
+          api.respondPermission({ decision: 'allow' });
+        } else if (state.pendingQuestion) {
+          // Let QuestionPanel handle via its own submit
+          document.querySelector<HTMLButtonElement>('.question-actions .btn-allow:not(:disabled)')?.click();
+        }
+      }
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        if (state.pendingPermission) {
+          api.respondPermission({ decision: 'deny' });
+        } else if (state.pendingQuestion) {
+          api.skipQuestion();
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [state.pendingPermission, state.pendingQuestion]);
+
   const handleSend = () => {
     const text = input.trim();
     if (!text || !state.activeSessionPid) return;
@@ -98,7 +124,7 @@ export function App() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={state.activeSessionPid ? 'Send to Claude...' : 'No active session'}
+          placeholder={state.activeSessionPid ? 'Enviar para o Claude...' : 'Nenhuma sessão ativa'}
           disabled={!state.activeSessionPid}
         />
 
@@ -152,15 +178,15 @@ export function App() {
         <div className="permission-bar">
           <div className="permission-info">
             <span className="permission-dot" />
-            <span className="permission-tool">{pendingEvent?.tool || 'Action'}</span>
+            <span className="permission-tool">{pendingEvent?.tool || 'Ação'}</span>
             <span className="permission-desc">{pendingEvent?.message}</span>
           </div>
           <div className="permission-actions">
-            <button className="btn-action btn-allow" onClick={() => api.respondPermission({ decision: 'allow' })}>
-              Allow
+            <button className="btn-action btn-allow" onClick={() => api.respondPermission({ decision: 'allow' })} title="⌘ Enter">
+              Permitir
             </button>
-            <button className="btn-action btn-deny" onClick={() => api.respondPermission({ decision: 'deny' })}>
-              Deny
+            <button className="btn-action btn-deny" onClick={() => api.respondPermission({ decision: 'deny' })} title="⌘ ⌫">
+              Negar
             </button>
           </div>
         </div>
@@ -268,16 +294,16 @@ function QuestionPanel({ question }: { question: PendingQuestion }) {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && canSubmit) { e.preventDefault(); submit(); }
             }}
-            placeholder="Type your answer..."
+            placeholder="Digite sua resposta..."
           />
         </div>
       )}
       <div className="question-actions">
-        <button className="btn-action btn-allow" onClick={submit} disabled={!canSubmit}>
-          Submit
+        <button className="btn-action btn-allow" onClick={submit} disabled={!canSubmit} title="⌘ Enter">
+          Enviar
         </button>
-        <button className="btn-action btn-deny" onClick={() => (window as any).overlayAPI.skipQuestion()}>
-          Skip
+        <button className="btn-action btn-deny" onClick={() => (window as any).overlayAPI.skipQuestion()} title="⌘ ⌫">
+          Pular
         </button>
       </div>
     </div>
