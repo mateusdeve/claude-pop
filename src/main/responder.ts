@@ -28,30 +28,26 @@ export function findTtyForPid(pid: number): string | undefined {
  * Find the terminal app by walking up the process tree (macOS only).
  */
 function findTerminalApp(pid: number): string {
-  const known: Record<string, string> = {
-    'Terminal': 'Terminal',
-    'iTerm': 'iTerm2',
-    'Warp': 'Warp',
-    'Alacritty': 'Alacritty',
-    'kitty': 'kitty',
-    'Cursor': 'Cursor',
-    'Code': 'Code',
-  };
-
   try {
     let cur = pid;
     for (let i = 0; i < 15; i++) {
       const ppid = execSync(`ps -p ${cur} -o ppid=`, { encoding: 'utf-8' }).trim();
       if (!ppid || ppid === '0' || ppid === '1') break;
       const comm = execSync(`ps -p ${ppid} -o comm=`, { encoding: 'utf-8' }).trim();
-      const base = comm.split('/').pop() || '';
-      for (const [k, v] of Object.entries(known)) {
-        if (base.includes(k)) return v;
+
+      // Extract .app name from full path (e.g. "/Applications/Antigravity.app/Contents/..." → "Antigravity")
+      const appMatch = comm.match(/\/([^/]+)\.app\//);
+      if (appMatch) {
+        const appName = appMatch[1];
+        console.log(`[responder] Detected app from path: ${appName}`);
+        return appName;
       }
+
       cur = parseInt(ppid);
     }
   } catch {}
-  return 'Cursor'; // default
+
+  return 'Terminal';
 }
 
 /**

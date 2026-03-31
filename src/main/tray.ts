@@ -13,7 +13,7 @@ const POSITIONS: { label: string; value: OverlayPosition }[] = [
   { label: 'Bottom Right', value: 'bottom-right' },
 ];
 
-export function createTray(onQuit: () => void, onPositionChange: () => void) {
+export function createTray(onQuit: () => void, onPositionChange: () => void, onToggle?: () => void) {
   const iconPath = path.join(__dirname, '../../assets/trayTemplate.png');
   const icon = nativeImage.createFromPath(iconPath);
   icon.setTemplateImage(true);
@@ -50,6 +50,10 @@ export function createTray(onQuit: () => void, onPositionChange: () => void) {
 
   tray.setToolTip('Claude Pop');
   tray.setContextMenu(buildMenu());
+
+  if (onToggle) {
+    tray.on('click', () => onToggle());
+  }
 
   return tray;
 }

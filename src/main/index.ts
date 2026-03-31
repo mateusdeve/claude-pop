@@ -163,6 +163,7 @@ function resizeBar() {
 function showBar() {
   if (!mainWindow) return;
   state.expanded = true;
+  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   positionBar();
   mainWindow.show();
   mainWindow.focus();
@@ -200,14 +201,8 @@ function createWindow() {
     },
   });
 
-  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   mainWindow.setBackgroundColor('#00000000');
-
   mainWindow.loadFile(join(__dirname, '..', 'renderer', 'index.html'));
-
-  // mainWindow.on('blur', () => {
-  //   if (state.expanded) hideBar();
-  // });
 
   mainWindow.webContents.on('console-message', (_e, _level, message) => {
     console.log('[renderer]', message);
@@ -477,6 +472,7 @@ async function main() {
     notify('Permissão necessária', event.message || `${event.tool || 'Ação'} precisa de aprovação`);
     showBar();
     resizeBar();
+    sendState();
   });
 
   overlayServer.on('question', ({ id, event, toolInput }: { id: string; event: OverlayEvent; toolInput: Record<string, unknown> }) => {
@@ -499,11 +495,13 @@ async function main() {
     notify('Claude asks', question);
     showBar();
     resizeBar();
+    sendState();
   });
 
   createTray(
     () => { sessionManager.stop(); },
-    () => { if (state.expanded) positionBar(); }
+    () => { if (state.expanded) positionBar(); },
+    () => toggleBar(),
   );
 
   console.log('Claude Overlay ready. Press Ctrl+J to toggle.');

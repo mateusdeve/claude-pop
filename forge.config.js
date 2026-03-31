@@ -9,7 +9,7 @@ module.exports = {
       ? {
           osxSign: {},
           osxNotarize: {
-            appleApiKey: process.env.APPLE_API_KEY_PATH,
+            appleApiKey: (process.env.APPLE_API_KEY_PATH || '').replace(/^~/, process.env.HOME || ''),
             appleApiKeyId: process.env.APPLE_API_KEY_ID,
             appleApiIssuer: process.env.APPLE_API_ISSUER,
           },
