@@ -10,17 +10,7 @@ permissions:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            platform: darwin
-          - os: ubuntu-latest
-            platform: linux
-          - os: windows-latest
-            platform: win32
-
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -29,8 +19,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Import Apple certificate (macOS)
-        if: matrix.platform == 'darwin'
+      - name: Import Apple certificate
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -49,8 +38,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
-      - name: Prepare Apple API key (macOS)
-        if: matrix.platform == 'darwin'
+      - name: Prepare Apple API key
         env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
         run: |
@@ -65,105 +53,18 @@ jobs:
 
       - name: Make distributables
         timeout-minutes: 60
-        shell: bash
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          DEBUG: ${{ matrix.platform == 'darwin' && 'electron-osx-sign*,electron-notarize*' || '' }}
+          DEBUG: electron-osx-sign*,electron-notarize*
         run: |
-          if [ "${{ matrix.platform }}" = "darwin" ]; then
-            export APPLE_API_KEY_PATH="$HOME/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8"
-            echo "Using API key at: $APPLE_API_KEY_PATH"
-            ls -la "$APPLE_API_KEY_PATH" || echo "WARNING: API key file not found!"
-          fi
+          export APPLE_API_KEY_PATH="$HOME/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8"
+          echo "Using API key at: $APPLE_API_KEY_PATH"
+          ls -la "$APPLE_API_KEY_PATH" || echo "WARNING: API key file not found!"
           npx electron-forge make
-
-      - name: Generate update manifest (macOS)
-        if: matrix.platform == 'darwin'
-        shell: bash
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          cd out/make
-          ZIP=$(find . -name '*.zip' | head -1)
-          if [ -n "$ZIP" ]; then
-            SHA512=$(shasum -a 512 "$ZIP" | awk '{print $1}')
-            SIZE=$(stat -f%z "$ZIP" 2>/dev/null || stat -c%s "$ZIP")
-            BASENAME=$(basename "$ZIP")
-            cat > latest-mac.yml <<EOF
-          version: ${VERSION}
-          files:
-            - url: ${BASENAME}
-              sha512: ${SHA512}
-              size: ${SIZE}
-          path: ${BASENAME}
-          sha512: ${SHA512}
-          releaseDate: '$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'
-          EOF
-          fi
-
-      - name: Generate update manifest (Linux)
-        if: matrix.platform == 'linux'
-        shell: bash
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          cd out/make
-          DEB=$(find . -name '*.deb' | head -1)
-          if [ -n "$DEB" ]; then
-            SHA512=$(sha512sum "$DEB" | awk '{print $1}')
-            SIZE=$(stat -c%s "$DEB")
-            BASENAME=$(basename "$DEB")
-            cat > latest-linux.yml <<EOF
-          version: ${VERSION}
-          files:
-            - url: ${BASENAME}
-              sha512: ${SHA512}
-              size: ${SIZE}
-          path: ${BASENAME}
-          sha512: ${SHA512}
-          releaseDate: '$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'
-          EOF
-          fi
-
-      - name: Generate update manifest (Windows)
-        if: matrix.platform == 'win32'
-        shell: bash
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          cd out/make
-          EXE=$(find . -name '*.exe' | head -1)
-          if [ -n "$EXE" ]; then
-            SHA512=$(sha512sum "$EXE" | awk '{print $1}')
-            SIZE=$(stat -c%s "$EXE")
-            BASENAME=$(basename "$EXE")
-            cat > latest.yml <<EOF
-          version: ${VERSION}
-          files:
-            - url: ${BASENAME}
-              sha512: ${SHA512}
-              size: ${SIZE}
-          path: ${BASENAME}
-          sha512: ${SHA512}
-          releaseDate: '$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'
-          EOF
-          fi
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: claude-pop-${{ matrix.platform }}
-          path: out/make/**/*
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/**/*
+          files: out/make/**/*
           generate_release_notes: true
