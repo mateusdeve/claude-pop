@@ -628,6 +628,15 @@
     .dl-btn:hover { transform: translateY(-2px); }
     .dl-btn:active { transform: scale(0.97); }
 
+    .dl-btn-disabled {
+      background: var(--surface);
+      color: var(--text-sub);
+      border: 1px solid var(--border-light);
+      opacity: 0.5;
+      cursor: default;
+      pointer-events: none;
+    }
+
     .dl-btn-primary {
       background: var(--pink);
       color: var(--dark);
@@ -998,7 +1007,7 @@
         <div class="step-card">
           <div class="step-number">1</div>
           <h3>Instale o app</h3>
-          <p>Baixe e instale em menos de um minuto. Disponível para macOS, Windows e Linux.</p>
+          <p>Baixe e instale em menos de um minuto. Disponível para macOS. Windows e Linux em breve.</p>
         </div>
         <div class="step-card">
           <div class="step-number">2</div>
@@ -1025,7 +1034,7 @@
             gratuitamente
           </h2>
           <p>
-            Open source, leve e disponível para todas as plataformas.
+            Open source e leve. Disponível para macOS — Windows e Linux em breve.
           </p>
           <div class="install-note">
             <button class="install-toggle" onclick="this.classList.toggle('open');document.getElementById('install-steps').classList.toggle('open')">
@@ -1038,12 +1047,8 @@
                 Na primeira vez, clique com o <strong>botão direito</strong> no app &rarr; <strong>Abrir</strong> &rarr; confirme no diálogo.
               </div>
               <div class="step-platform">
-                <div class="step-label">Windows</div>
-                Execute o <code>Claude Pop Setup.exe</code>. Se o SmartScreen aparecer, clique em <strong>Mais informações</strong> &rarr; <strong>Executar assim mesmo</strong>.
-              </div>
-              <div class="step-platform">
-                <div class="step-label">Linux</div>
-                Instale com <code>sudo dpkg -i claude-pop_*.deb</code> ou <code>sudo rpm -i claude-pop-*.rpm</code>.
+                <div class="step-label">Windows / Linux</div>
+                Em breve. Acompanhe no <a href="https://github.com/mateusdeve/claude-pop" target="_blank">GitHub</a>.
               </div>
             </div>
           </div>
@@ -1053,14 +1058,14 @@
             <svg class="dl-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
             <span class="dl-btn-label">macOS<br><span class="dl-btn-hint">.dmg &middot; Apple Silicon & Intel</span></span>
           </a>
-          <a class="dl-btn dl-btn-secondary" href="https://github.com/mateusdeve/claude-pop/releases/latest/download/Claude.Pop.Setup.exe" id="dl-win">
+          <span class="dl-btn dl-btn-disabled" id="dl-win">
             <svg class="dl-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l8-1.25v6.5H3zm0 .5h8v6.5l-8-1.25V12.5zM11.5 5.38l9.5-1.63v8.25h-9.5V5.38zm0 7.12h9.5v8.25l-9.5-1.63V12.5z"/></svg>
-            <span class="dl-btn-label">Windows<br><span class="dl-btn-hint">.exe &middot; Windows 10+</span></span>
-          </a>
-          <a class="dl-btn dl-btn-secondary" href="https://github.com/mateusdeve/claude-pop/releases/latest" id="dl-linux">
+            <span class="dl-btn-label">Windows<br><span class="dl-btn-hint">Em breve</span></span>
+          </span>
+          <span class="dl-btn dl-btn-disabled" id="dl-linux">
             <svg class="dl-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.368 1.884 1.368.39 0 .739-.134 1.107-.534.117-.134.241-.2.371-.334.218-.2.467-.4.6-.868.012-.063.024-.158.035-.27.327-.066.667-.25.88-.466.413-.466.27-.9.527-1.334a.96.96 0 00.067-.132c.001 0 .003-.002.003-.002.048-.087.086-.169.123-.25.403-.732.416-1.396-.184-2.277-.6-.468-1.218-.667-1.413-.066-.195.6-.195 1.204.4 1.404.4.133.33.267.05.334-.278.066-.547.267-.547.533 0 .068.2.135.5.203-.3.067-.5.267-.5.467 0 .267.3.5.7.5.267 0 .5-.133.6-.267.1.067.2.134.3.267-.2.2-.5.334-.9.334-.5 0-.9-.267-1.1-.534-.416.267-.83.534-1.33.534-.5 0-1-.267-1.3-.534 0 0-.1.267-.3.534-.5.667-1.5.934-2.5.534-.7-.267-1-.934-1-1.534 0-.4.2-.8.4-1.067 0 0-.3-.133-.6-.4-.3-.267-.5-.6-.6-.934-.1-.333-.1-.667 0-.867.1-.2.3-.333.5-.4-.2-.4-.3-.868-.2-1.333.1-.467.4-.934.9-1.334.5-.4 1.1-.6 1.6-.534-.1-.133-.1-.266-.1-.4 0-.6.3-1.067.7-1.334-.2-.266-.4-.533-.5-.8-.2-.4-.3-.866-.3-1.333s.1-.867.3-1.267c.3-.5.7-.934 1.1-1.2.5-.4 1-.6 1.5-.667.6-.067 1.2.067 1.7.267.5-.533 1.1-.867 1.8-1 .7-.133 1.4 0 2 .4.7.4 1.2 1.067 1.4 1.867.1.333.1.667.1 1-.3-.133-.6-.133-.9-.067-.4.067-.7.267-.9.534-.3.4-.3.866-.1 1.266.1.267.3.467.5.6.1-.4.3-.667.6-.867.3-.133.7-.2 1-.067-.3-.667-.9-1.133-1.6-1.333-.4-.134-.8-.134-1.2-.067-.4.067-.7.267-1 .534.2.4.3.866.3 1.333s-.1.934-.3 1.334c-.2.266-.4.533-.6.733.3.133.6.333.8.6.3.333.4.733.4 1.133 0 .133 0 .267-.1.4.5-.067 1.1.133 1.6.534.5.4.8.866.9 1.333.1.467 0 .934-.2 1.334.2.066.4.2.5.4.1.2.1.533 0 .866-.1.334-.3.667-.6.934-.3.267-.6.4-.6.4.2.267.4.667.4 1.067 0 .6-.3 1.267-1 1.534-1 .4-2 .133-2.5-.534-.2-.267-.3-.534-.3-.534-.3.267-.8.534-1.3.534-.5 0-.914-.267-1.33-.534-.2.267-.6.534-1.1.534-.4 0-.7-.134-.9-.334.1-.133.2-.2.3-.267.1.134.333.267.6.267.4 0 .7-.233.7-.5 0-.2-.2-.4-.5-.467.3-.068.5-.135.5-.203 0-.266-.269-.467-.547-.533-.28-.067-.35-.201.05-.334.595-.2.6-.666 0-1.134-.184-.134-.25-.4-.184-.667z"/></svg>
-            <span class="dl-btn-label">Linux<br><span class="dl-btn-hint">.deb / .rpm</span></span>
-          </a>
+            <span class="dl-btn-label">Linux<br><span class="dl-btn-hint">Em breve</span></span>
+          </span>
         </div>
       </div>
     </div>
@@ -1085,21 +1090,8 @@
   </footer>
 
   <script>
-    // Auto-detect OS and highlight the right download button
-    const ua = navigator.userAgent.toLowerCase();
-    let primary = 'dl-mac';
-    if (ua.includes('win')) primary = 'dl-win';
-    else if (ua.includes('linux')) primary = 'dl-linux';
-
-    document.querySelectorAll('.dl-btn').forEach(btn => {
-      if (btn.id === primary) {
-        btn.classList.remove('dl-btn-secondary');
-        btn.classList.add('dl-btn-primary');
-      } else {
-        btn.classList.remove('dl-btn-primary');
-        btn.classList.add('dl-btn-secondary');
-      }
-    });
+    // macOS is the only available download for now
+    // Windows and Linux buttons are disabled ("Em breve")
 
     // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(a => {
