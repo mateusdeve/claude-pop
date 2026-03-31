@@ -16,6 +16,14 @@ const IPC = {
   SET_APPROVAL_MODE: 'overlay:set-approval-mode',
   CONTENT_HEIGHT: 'overlay:content-height',
   NEW_SESSION: 'overlay:new-session',
+  GET_CONVERSATION: 'overlay:get-conversation',
+  CONVERSATION_UPDATE: 'overlay:conversation-update',
+  SEND_WITH_IMAGE: 'overlay:send-with-image',
+  GET_COMMANDS: 'overlay:get-commands',
+  SAVE_SESSION: 'overlay:save-session',
+  GET_SAVED_SESSIONS: 'overlay:get-saved-sessions',
+  REMOVE_SAVED_SESSION: 'overlay:remove-saved-session',
+  RESUME_SESSION: 'overlay:resume-session',
 } as const;
 
 const api = {
@@ -79,6 +87,40 @@ const api = {
 
   newSession() {
     ipcRenderer.send(IPC.NEW_SESSION);
+  },
+
+  getConversation(): Promise<any[]> {
+    return ipcRenderer.invoke(IPC.GET_CONVERSATION);
+  },
+
+  onConversationUpdate(callback: (messages: any[]) => void) {
+    const handler = (_: unknown, messages: any[]) => callback(messages);
+    ipcRenderer.on(IPC.CONVERSATION_UPDATE, handler);
+    return () => { ipcRenderer.removeListener(IPC.CONVERSATION_UPDATE, handler); };
+  },
+
+  sendWithImage(text: string, images: { base64: string; name: string }[], sessionPid: number) {
+    ipcRenderer.send(IPC.SEND_WITH_IMAGE, { text, images, sessionPid });
+  },
+
+  getCommands(): Promise<any[]> {
+    return ipcRenderer.invoke(IPC.GET_COMMANDS);
+  },
+
+  saveSession(sessionId: string, name: string, cwd: string) {
+    ipcRenderer.send(IPC.SAVE_SESSION, { sessionId, name, cwd });
+  },
+
+  getSavedSessions(): Promise<any[]> {
+    return ipcRenderer.invoke(IPC.GET_SAVED_SESSIONS);
+  },
+
+  removeSavedSession(sessionId: string) {
+    ipcRenderer.send(IPC.REMOVE_SAVED_SESSION, sessionId);
+  },
+
+  resumeSession(sessionId: string, cwd: string) {
+    ipcRenderer.send(IPC.RESUME_SESSION, { sessionId, cwd });
   },
 };
 

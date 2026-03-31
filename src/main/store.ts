@@ -87,3 +87,55 @@ export function getFavorites(): SessionStore {
   }
   return favs;
 }
+
+// === Saved Sessions (for resume) ===
+export interface SavedSession {
+  sessionId: string;
+  name: string;
+  cwd: string;
+  savedAt: string;
+}
+
+const SAVED_FILE = join(STORE_DIR, 'saved-sessions.json');
+let savedCache: SavedSession[] | null = null;
+
+function loadSaved(): SavedSession[] {
+  if (savedCache) return savedCache;
+  try {
+    if (existsSync(SAVED_FILE)) {
+      savedCache = JSON.parse(readFileSync(SAVED_FILE, 'utf-8'));
+      return savedCache!;
+    }
+  } catch {}
+  savedCache = [];
+  return savedCache;
+}
+
+function saveSaved() {
+  if (!existsSync(STORE_DIR)) mkdirSync(STORE_DIR, { recursive: true });
+  writeFileSync(SAVED_FILE, JSON.stringify(savedCache, null, 2));
+}
+
+export function getSavedSessions(): SavedSession[] {
+  return loadSaved();
+}
+
+export function saveSession(sessionId: string, name: string, cwd: string) {
+  const list = loadSaved();
+  const existing = list.findIndex(s => s.sessionId === sessionId);
+  const entry: SavedSession = { sessionId, name, cwd, savedAt: new Date().toISOString() };
+  if (existing >= 0) {
+    list[existing] = entry;
+  } else {
+    list.unshift(entry);
+  }
+  // Keep last 20
+  savedCache = list.slice(0, 20);
+  saveSaved();
+}
+
+export function removeSavedSession(sessionId: string) {
+  const list = loadSaved();
+  savedCache = list.filter(s => s.sessionId !== sessionId);
+  saveSaved();
+}

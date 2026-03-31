@@ -5,9 +5,9 @@ module.exports = {
     icon: './assets/icon',
     appBundleId: 'com.mateusdeve.claude-pop',
     asar: true,
-    osxSign: {},
     ...(process.env.APPLE_API_KEY_ID
       ? {
+          osxSign: {},
           osxNotarize: {
             appleApiKey: process.env.APPLE_API_KEY_PATH,
             appleApiKeyId: process.env.APPLE_API_KEY_ID,

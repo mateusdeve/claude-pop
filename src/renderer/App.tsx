@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import type { OverlayState, PermissionDecision, PendingQuestion, SessionStatus, OverlayEvent, ApprovalMode } from '../shared/types';
+import type { OverlayState, PermissionDecision, PendingQuestion, SessionStatus, OverlayEvent, ApprovalMode, ConversationMessage, SlashCommand } from '../shared/types';
 
 const api = (window as any).overlayAPI;
 
@@ -52,11 +52,6 @@ const MascotButton = ({ mode, isWorking, onClick }: { mode: ApprovalMode; isWork
   );
 };
 
-const IconClock = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M13.6 8.00001C13.6 11.0925 11.0925 13.6 8.00001 13.6C4.90751 13.6 2.40001 11.0925 2.40001 8.00001C2.40001 4.90751 4.90751 2.40001 8.00001 2.40001C11.0925 2.40001 13.6 4.90751 13.6 8.00001ZM1.60001 8.00001C1.60001 11.535 4.46501 14.4 8.00001 14.4C11.535 14.4 14.4 11.535 14.4 8.00001C14.4 4.46501 11.535 1.60001 8.00001 1.60001C4.46501 1.60001 1.60001 4.46501 1.60001 8.00001ZM7.60001 4.40001V8.00001C7.60001 8.13501 7.66751 8.25751 7.77751 8.33251L10.1775 9.93251C10.3625 10.055 10.61 10.005 10.7325 9.82251C10.855 9.64001 10.805 9.39001 10.6225 9.26751L8.40001 7.78501V4.40001C8.40001 4.18001 8.22001 4.00001 8.00001 4.00001C7.78001 4.00001 7.60001 4.18001 7.60001 4.40001Z" fill="white"/>
-  </svg>
-);
 
 const IconChevron = () => (
   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -67,6 +62,12 @@ const IconChevron = () => (
 const IconSend = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M5.04748 8.60001L3.17248 12.815L12.33 8.60001H5.04748ZM12.33 7.40001L3.17248 3.18501L5.04748 7.40001H12.33ZM1.66998 13.24L3.99998 8.00001L1.66998 2.76001C1.62498 2.65501 1.59998 2.54001 1.59998 2.42501C1.59998 1.97001 1.96748 1.60001 2.41998 1.60001C2.53748 1.60001 2.65498 1.62501 2.76248 1.67501L14.655 7.15001C14.9875 7.30251 15.2 7.63501 15.2 8.00001C15.2 8.36501 14.9875 8.69751 14.655 8.85001L2.76248 14.325C2.65498 14.375 2.53748 14.4 2.41998 14.4C1.96748 14.4 1.59998 14.03 1.59998 13.575C1.59998 13.46 1.62498 13.345 1.66998 13.24Z" fill="white"/>
+  </svg>
+);
+
+const IconChat = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2.4 2.4H13.6C14.04 2.4 14.4 2.76 14.4 3.2V10.4C14.4 10.84 14.04 11.2 13.6 11.2H4.4L1.6 14V3.2C1.6 2.76 1.96 2.4 2.4 2.4ZM4.8 5.6H11.2V6.4H4.8V5.6ZM4.8 7.6H9.6V8.4H4.8V7.6Z" fill="white"/>
   </svg>
 );
 
@@ -86,13 +87,45 @@ export function App() {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [animKey, setAnimKey] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [attachedImages, setAttachedImages] = useState<{ base64: string; name: string }[]>([]);
+  const [commands, setCommands] = useState<SlashCommand[]>([]);
+  const [slashIndex, setSlashIndex] = useState(0);
+  const [savedSessions, setSavedSessions] = useState<{ sessionId: string; name: string; cwd: string; savedAt: string }[]>([]);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const expandedInputRef = useRef<HTMLTextAreaElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
 
+  const lastCmdPidRef = useRef<number | null>(null);
   useEffect(() => {
     api.getState().then(setState);
+    api.getSavedSessions().then(setSavedSessions);
     return api.onStateUpdate(setState);
+  }, []);
+
+  // Reload commands when active session changes
+  useEffect(() => {
+    if (state.activeSessionPid && state.activeSessionPid !== lastCmdPidRef.current) {
+      lastCmdPidRef.current = state.activeSessionPid;
+      api.getCommands().then(setCommands);
+    }
+  }, [state.activeSessionPid]);
+
+  const convOpenRef = useRef(false);
+
+  useEffect(() => {
+    api.getConversation().then((msgs: ConversationMessage[]) => {
+      setConversation(msgs);
+      prevConvLenRef.current = msgs.length;
+    });
+    return api.onConversationUpdate((msgs: ConversationMessage[]) => {
+      setConversation(msgs);
+      if (msgs.length > prevConvLenRef.current && !convOpenRef.current) {
+        setConvUnread(true);
+      }
+      prevConvLenRef.current = msgs.length;
+    });
   }, []);
 
   useEffect(() => {
@@ -105,6 +138,16 @@ export function App() {
   useEffect(() => {
     if (editingName) nameRef.current?.focus();
   }, [editingName]);
+
+  // Auto-focus expanded input when it appears, and move cursor to end
+  const isExpanded = input.length > 30;
+  useEffect(() => {
+    if (isExpanded && expandedInputRef.current) {
+      expandedInputRef.current.focus();
+      const len = expandedInputRef.current.value.length;
+      expandedInputRef.current.setSelectionRange(len, len);
+    }
+  }, [isExpanded]);
 
   // Report actual content height to main process
   useEffect(() => {
@@ -136,6 +179,8 @@ export function App() {
           api.respondPermission({ decision: 'allow' });
         } else if (state.pendingQuestion) {
           document.querySelector<HTMLButtonElement>('.question-actions .btn-allow:not(:disabled)')?.click();
+        } else if (input.trim()) {
+          handleSend();
         }
       }
       if (e.key === 'Backspace') {
@@ -153,14 +198,42 @@ export function App() {
 
   const handleSend = () => {
     const text = input.trim();
-    if (!text || !state.activeSessionPid) return;
-    api.respondText(text, state.activeSessionPid);
+    if ((!text && attachedImages.length === 0) || !state.activeSessionPid) return;
+    if (attachedImages.length > 0) {
+      api.sendWithImage(text, attachedImages, state.activeSessionPid);
+      setAttachedImages([]);
+    } else {
+      api.respondText(text, state.activeSessionPid);
+    }
     setInput('');
   };
 
+  // Slash command autocomplete
+  const showSlash = input.startsWith('/') && input.indexOf(' ') === -1;
+  const filteredCommands = showSlash
+    ? commands.filter(c => `/${c.name}`.toLowerCase().includes(input.toLowerCase())).slice(0, 8)
+    : [];
+
+  const selectSlashCommand = (cmd: SlashCommand) => {
+    setInput(`/${cmd.name} `);
+    setSlashIndex(0);
+    setTimeout(() => {
+      inputRef.current?.focus();
+      expandedInputRef.current?.focus();
+    }, 50);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-    if (e.key === 'Escape') api.togglePanel();
+    if (filteredCommands.length > 0) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setSlashIndex(i => Math.min(i + 1, filteredCommands.length - 1)); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setSlashIndex(i => Math.max(i - 1, 0)); return; }
+      if (e.key === 'Enter') { e.preventDefault(); selectSlashCommand(filteredCommands[slashIndex]); return; }
+      if (e.key === 'Tab') { e.preventDefault(); selectSlashCommand(filteredCommands[slashIndex]); return; }
+      if (e.key === 'Escape') { setInput(''); return; }
+    } else {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+      if (e.key === 'Escape') api.togglePanel();
+    }
   };
 
   const activeSession = state.sessions.find(s => s.pid === state.activeSessionPid);
@@ -192,23 +265,57 @@ export function App() {
   const sortedSessions = [...state.sessions];
 
   const [sessionListOpen, setSessionListOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
+  const [conversationOpen, setConversationOpen] = useState(false);
+  const [conversation, setConversation] = useState<ConversationMessage[]>([]);
+  const [convUnread, setConvUnread] = useState(false);
+  const prevConvLenRef = useRef(0);
 
   const toggleSessionList = (open?: boolean) => {
     const next = open !== undefined ? open : !sessionListOpen;
     setSessionListOpen(next);
-    if (next) setHistoryOpen(false);
+    if (next) { setConversationOpen(false); }
     api.toggleSessionList(next, state.sessions.length);
   };
 
-  const toggleHistory = () => {
-    const next = !historyOpen;
-    setHistoryOpen(next);
+  const toggleConversation = () => {
+    const next = !conversationOpen;
+    setConversationOpen(next);
+    convOpenRef.current = next;
     if (next) {
+      setConvUnread(false);
       setSessionListOpen(false);
       api.toggleSessionList(false, 0);
     }
-    api.setPanelHeight(next ? 240 : 0);
+    api.setPanelHeight(next ? 300 : 0);
+  };
+
+  const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files).filter(f => ALLOWED_TYPES.includes(f.type));
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAttachedImages(prev => [...prev, { base64: reader.result as string, name: file.name }]);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const hasPending = !!state.pendingPermission;
@@ -221,7 +328,14 @@ export function App() {
   const sessionLabel = activeSession?.name || activeSession?.cwd.split('/').pop() || '';
 
   return (
-    <div key={animKey} ref={barRef} className="command-bar">
+    <div
+      key={animKey}
+      ref={barRef}
+      className={`command-bar ${dragOver ? 'drag-active' : ''}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {hasPending ? (
         /* ===== Permission Card ===== */
         <div className="permission-bar">
@@ -274,11 +388,15 @@ export function App() {
           </div>
 
           <button
-            className={`btn-box ${historyOpen ? 'active' : ''}`}
-            onClick={toggleHistory}
-            title="Historico"
+            className={`btn-box ${conversationOpen ? 'active' : ''}`}
+            onClick={toggleConversation}
+            title="Conversa"
           >
-            <IconClock />
+            <IconChat />
+            {convUnread && <span className="conv-unread-dot" />}
+            {!convUnread && conversation.length > 0 && conversation[conversation.length - 1].role === 'assistant' && conversation[conversation.length - 1].isComplete && (
+              <span className="conv-done-dot" />
+            )}
           </button>
 
           {state.sessions.length > 0 ? (
@@ -306,22 +424,36 @@ export function App() {
                 </div>
               )}
 
-              <div className="input-wrap">
-                <input
-                  ref={inputRef}
-                  className="input-field"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Enviar para o Claude..."
-                  disabled={!state.activeSessionPid}
-                />
-              </div>
+              {!isExpanded ? (
+                <>
+                  <div className="input-wrap">
+                    <textarea
+                      ref={inputRef}
+                      className="input-field"
+                      value={input}
+                      onChange={(e) => { setInput(e.target.value); setSlashIndex(0); }}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Enviar para o Claude..."
+                      disabled={!state.activeSessionPid}
+                      rows={1}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="expanded-bar-hint">
+                  <span className="kbd-group">
+                    <span className="kbd">{'\u2318'}</span>
+                    <span className="kbd-plus">+</span>
+                    <span className="kbd">{'\u21B5'}</span>
+                  </span>
+                  <span className="send-hint-label">Para enviar</span>
+                </div>
+              )}
 
               <button
                 className="btn-send"
                 onClick={handleSend}
-                disabled={!input.trim() || !state.activeSessionPid}
+                disabled={(!input.trim() && attachedImages.length === 0) || !state.activeSessionPid}
               >
                 <IconSend />
               </button>
@@ -335,25 +467,119 @@ export function App() {
         </div>
       )}
 
+      {/* Slash command autocomplete */}
+      {filteredCommands.length > 0 && (
+        <div className="slash-dropdown">
+          {filteredCommands.map((cmd, i) => (
+            <button
+              key={cmd.name}
+              className={`slash-item ${i === slashIndex ? 'active' : ''}`}
+              onClick={() => selectSlashCommand(cmd)}
+              onMouseEnter={() => setSlashIndex(i)}
+            >
+              <span className="slash-name">/{cmd.name}</span>
+              <span className="slash-desc">{cmd.description}</span>
+              {cmd.scope !== 'plugin' && <span className="slash-scope">({cmd.scope})</span>}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Image preview */}
+      {attachedImages.length > 0 && (
+        <div className="image-preview">
+          {attachedImages.map((img, i) => (
+            <div key={i} className="image-thumb-wrap">
+              <img className="image-thumb" src={img.base64} alt="" />
+              <button className="image-remove" onClick={() => setAttachedImages(prev => prev.filter((_, j) => j !== i))}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Expanded input panel */}
+      {isExpanded && (
+        <div className="expanded-input-panel">
+          <div className="expanded-input-wrap">
+            <textarea
+              ref={expandedInputRef}
+              className="expanded-input-field"
+              value={input}
+              onChange={(e) => { setInput(e.target.value); setSlashIndex(0); }}
+              onKeyDown={handleKeyDown}
+              placeholder="Enviar para o Claude..."
+              disabled={!state.activeSessionPid}
+              rows={Math.min(Math.max(2, Math.ceil(input.length / 60)), 6)}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Session list */}
       {sessionListOpen && (
         <div className="session-list">
           {sortedSessions.map((s) => (
-            <button
-              key={s.pid}
-              className={`session-list-item ${s.pid === state.activeSessionPid ? 'active' : ''}`}
-              onClick={() => {
-                api.selectSession(s.pid);
-                toggleSessionList(false);
-              }}
-            >
-              <span className="dot" />
-              <span className="session-list-name">
-                {s.name || s.cwd.split('/').pop() || `PID ${s.pid}`}
-              </span>
-              <span className="session-list-pid">PID {s.pid}</span>
-            </button>
+            <div key={s.pid} className={`session-list-item ${s.pid === state.activeSessionPid ? 'active' : ''}`}>
+              <button
+                className="session-list-btn"
+                onClick={() => {
+                  api.selectSession(s.pid);
+                  toggleSessionList(false);
+                }}
+              >
+                <span className="dot" />
+                <span className="session-list-name">
+                  {s.name || s.cwd.split('/').pop() || `PID ${s.pid}`}
+                </span>
+                <span className="session-list-pid">PID {s.pid}</span>
+              </button>
+              <button
+                className="session-save-btn"
+                title="Salvar para resume"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  api.saveSession(s.sessionId, s.name || s.cwd.split('/').pop() || '', s.cwd);
+                  api.getSavedSessions().then(setSavedSessions);
+                }}
+              >
+                💾
+              </button>
+            </div>
           ))}
+
+          {/* Saved sessions */}
+          {savedSessions.length > 0 && (
+            <>
+              <div className="session-list-divider">Sessoes salvas</div>
+              {savedSessions.map((s) => (
+                <div key={s.sessionId} className="session-list-item saved">
+                  <button
+                    className="session-list-btn"
+                    onClick={() => {
+                      api.resumeSession(s.sessionId, s.cwd);
+                      toggleSessionList(false);
+                    }}
+                  >
+                    <span className="dot saved-dot" />
+                    <span className="session-list-name">{s.name || s.cwd.split('/').pop()}</span>
+                    <span className="session-list-pid">{s.sessionId.slice(0, 8)}</span>
+                  </button>
+                  <button
+                    className="session-remove-btn"
+                    title="Remover"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      api.removeSavedSession(s.sessionId);
+                      setSavedSessions(prev => prev.filter(x => x.sessionId !== s.sessionId));
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </>
+          )}
+
           <button
             className="session-list-item session-new"
             onClick={() => { api.newSession(); toggleSessionList(false); }}
@@ -364,47 +590,85 @@ export function App() {
         </div>
       )}
 
-      {historyOpen && <HistoryPanel events={state.events} />}
+      {conversationOpen && <ConversationPanel messages={conversation} status={state.sessionStatus} />}
       {state.pendingQuestion && <QuestionPanel question={state.pendingQuestion} />}
     </div>
   );
 }
 
-function timeAgo(ts: number): string {
-  const diff = Math.floor((Date.now() - ts) / 1000);
-  if (diff < 5) return 'agora';
-  if (diff < 60) return `${diff}s`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}min`;
-  return `${Math.floor(diff / 3600)}h`;
+/** Render inline markdown: **bold**, *italic*, `code`, ~~strike~~ */
+function renderMarkdown(text: string): (string | JSX.Element)[] {
+  const parts: (string | JSX.Element)[] = [];
+  // Combined regex: code backticks first (highest priority), then bold, strikethrough, italic
+  const re = /`([^`]+)`|\*\*(.+?)\*\*|~~(.+?)~~|\*(.+?)\*/g;
+  let last = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > last) {
+      parts.push(text.slice(last, match.index));
+    }
+    if (match[1] !== undefined) {
+      parts.push(<code key={key++} className="conv-code">{match[1]}</code>);
+    } else if (match[2] !== undefined) {
+      parts.push(<strong key={key++}>{match[2]}</strong>);
+    } else if (match[3] !== undefined) {
+      parts.push(<s key={key++}>{match[3]}</s>);
+    } else if (match[4] !== undefined) {
+      parts.push(<em key={key++}>{match[4]}</em>);
+    }
+    last = match.index + match[0].length;
+  }
+
+  if (last < text.length) {
+    parts.push(text.slice(last));
+  }
+
+  return parts.length > 0 ? parts : [text];
 }
 
-const EVENT_ICONS: Record<string, string> = {
-  tool_use: '\u2699',
-  permission_prompt: '\u26A0',
-  elicitation_dialog: '\u2753',
-  idle_prompt: '\u23F8',
-  notification: '\u2139',
-  unknown: '\u2022',
-};
+function ConversationPanel({ messages, status }: { messages: ConversationMessage[]; status: string }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-function HistoryPanel({ events }: { events: OverlayEvent[] }) {
-  if (events.length === 0) {
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  if (messages.length === 0) {
     return (
-      <div className="history-panel">
-        <div className="history-empty">Nenhum evento ainda</div>
+      <div className="conversation-panel">
+        <div className="conv-empty">Nenhuma mensagem ainda</div>
       </div>
     );
   }
+
+  const lastMsg = messages[messages.length - 1];
+  const isTyping = lastMsg.role === 'assistant' && !lastMsg.isComplete;
+
   return (
-    <div className="history-panel">
-      {events.slice(0, 20).map((ev) => (
-        <div key={ev.id} className={`history-item history-${ev.type}`}>
-          <span className="history-icon">{EVENT_ICONS[ev.type] || '\u2022'}</span>
-          <span className="history-tool">{ev.tool || ev.type}</span>
-          <span className="history-msg">{ev.message}</span>
-          <span className="history-time">{timeAgo(ev.timestamp)}</span>
+    <div className="conversation-panel" ref={scrollRef}>
+      {messages.map((msg, i) => (
+        <div key={i} className={`conv-message conv-${msg.role}`}>
+          <div className="conv-bubble">
+            <span className="conv-text">{msg.text ? renderMarkdown(msg.text) : (msg.tools ? '' : '...')}</span>
+            {msg.tools && msg.tools.length > 0 && (
+              <span className="conv-tools">{msg.tools.join(', ')}</span>
+            )}
+          </div>
         </div>
       ))}
+      {isTyping && (
+        <div className="conv-message conv-assistant">
+          <div className="conv-typing">
+            <span className="conv-typing-dot" />
+            <span className="conv-typing-dot" />
+            <span className="conv-typing-dot" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

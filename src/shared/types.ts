@@ -55,6 +55,20 @@ export interface PendingQuestion {
   multiSelect: boolean;
 }
 
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  text: string;
+  timestamp: string;
+  isComplete: boolean;
+  tools?: string[];
+}
+
+export interface SlashCommand {
+  name: string;
+  description: string;
+  scope: 'user' | 'plugin' | 'project';
+}
+
 export interface SessionMeta {
   name: string;
   isFavorite: boolean;
@@ -93,4 +107,12 @@ export const IPC = {
   SET_APPROVAL_MODE: 'overlay:set-approval-mode',
   CONTENT_HEIGHT: 'overlay:content-height',
   NEW_SESSION: 'overlay:new-session',
+  GET_CONVERSATION: 'overlay:get-conversation',
+  CONVERSATION_UPDATE: 'overlay:conversation-update',
+  SEND_WITH_IMAGE: 'overlay:send-with-image',
+  GET_COMMANDS: 'overlay:get-commands',
+  SAVE_SESSION: 'overlay:save-session',
+  GET_SAVED_SESSIONS: 'overlay:get-saved-sessions',
+  REMOVE_SAVED_SESSION: 'overlay:remove-saved-session',
+  RESUME_SESSION: 'overlay:resume-session',
 } as const;

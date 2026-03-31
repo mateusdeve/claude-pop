@@ -1,18 +1,24 @@
 import { app, BrowserWindow, globalShortcut, ipcMain, screen, Notification, nativeImage, dialog } from 'electron';
 import { join } from 'path';
 import { exec } from 'child_process';
+import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { tmpdir } from 'os';
 import { OverlayServer } from './server';
 import { SessionManager } from './sessions';
 import { sendTextToSession } from './responder';
 import { createTray } from './tray';
 import { initAutoUpdater } from './updater';
-import { getSessionMeta, setSessionName, toggleFavorite, getConfig, setPosition, type OverlayPosition } from './store';
-import type { OverlayState, PermissionDecision, OverlayEvent, ClaudeSession } from '../shared/types';
+import { getSessionMeta, setSessionName, toggleFavorite, getConfig, setPosition, saveSession, getSavedSessions, removeSavedSession, type OverlayPosition } from './store';
+import { buildConversationPath, readLastMessages, watchConversation } from './conversation';
+import { scanCommands } from './commands';
+import type { OverlayState, PermissionDecision, OverlayEvent, ClaudeSession, ConversationMessage } from '../shared/types';
 import { IPC } from '../shared/types';
 
 let mainWindow: BrowserWindow | null = null;
 let overlayServer: OverlayServer;
 let sessionManager: SessionManager;
+let conversationWatcher: { stop: () => void } | null = null;
+let conversationMessages: ConversationMessage[] = [];
 
 const state: OverlayState = {
   sessions: [],
@@ -62,6 +68,32 @@ function sendState() {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send(IPC.STATE_UPDATE, state);
   }
+}
+
+function sendConversation() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(IPC.CONVERSATION_UPDATE, conversationMessages);
+  }
+}
+
+async function startConversationWatch(session: ClaudeSession) {
+  // Stop previous watcher
+  if (conversationWatcher) {
+    conversationWatcher.stop();
+    conversationWatcher = null;
+  }
+  conversationMessages = [];
+
+  if (!session.sessionId || !session.cwd) return;
+
+  const filePath = buildConversationPath(session.cwd, session.sessionId);
+  conversationMessages = await readLastMessages(filePath);
+  sendConversation();
+
+  conversationWatcher = watchConversation(filePath, (msgs) => {
+    conversationMessages = msgs;
+    sendConversation();
+  });
 }
 
 function notify(title: string, body: string) {
@@ -188,6 +220,11 @@ function createWindow() {
 
 function setupIPC() {
   ipcMain.handle(IPC.GET_STATE, () => state);
+  ipcMain.handle(IPC.GET_CONVERSATION, () => conversationMessages);
+  ipcMain.handle(IPC.GET_COMMANDS, () => {
+    const active = state.sessions.find(s => s.pid === state.activeSessionPid);
+    return scanCommands(active?.cwd);
+  });
 
   ipcMain.on(IPC.TOGGLE_PANEL, () => toggleBar());
 
@@ -213,6 +250,8 @@ function setupIPC() {
 
   ipcMain.on(IPC.SELECT_SESSION, (_e, pid: number) => {
     state.activeSessionPid = pid;
+    const session = state.sessions.find(s => s.pid === pid);
+    if (session) startConversationWatch(session);
     sendState();
   });
 
@@ -296,6 +335,51 @@ function setupIPC() {
     sendState();
   });
 
+  ipcMain.on(IPC.SEND_WITH_IMAGE, (_e, { text, images, sessionPid }: { text: string; images: { base64: string; name: string }[]; sessionPid: number }) => {
+    const session = state.sessions.find(s => s.pid === sessionPid);
+    if (!session) return;
+
+    const imgDir = join(tmpdir(), 'claude-overlay');
+    if (!existsSync(imgDir)) mkdirSync(imgDir, { recursive: true });
+
+    const paths: string[] = [];
+    for (const img of images) {
+      const ext = img.name.split('.').pop() || 'png';
+      const fileName = `img-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+      const filePath = join(imgDir, fileName);
+      const raw = img.base64.replace(/^data:image\/\w+;base64,/, '');
+      writeFileSync(filePath, Buffer.from(raw, 'base64'));
+      paths.push(filePath);
+    }
+
+    const message = [text, ...paths].filter(Boolean).join(' ');
+    sendTextToSession(session, message);
+    console.log(`[image] Saved ${paths.length} image(s), sending: ${message}`);
+  });
+
+  ipcMain.handle(IPC.GET_SAVED_SESSIONS, () => getSavedSessions());
+
+  ipcMain.on(IPC.SAVE_SESSION, (_e, { sessionId, name, cwd }: { sessionId: string; name: string; cwd: string }) => {
+    saveSession(sessionId, name, cwd);
+  });
+
+  ipcMain.on(IPC.REMOVE_SAVED_SESSION, (_e, sessionId: string) => {
+    removeSavedSession(sessionId);
+  });
+
+  ipcMain.on(IPC.RESUME_SESSION, (_e, { sessionId, cwd }: { sessionId: string; cwd: string }) => {
+    if (process.platform === 'darwin') {
+      exec(`osascript -e '
+        tell application "Terminal"
+          activate
+          do script "cd ${cwd.replace(/'/g, "\\'")} && claude --resume ${sessionId}"
+        end tell
+      '`);
+    } else {
+      exec(`x-terminal-emulator -e "bash -c 'cd ${cwd} && claude --resume ${sessionId}'"`);
+    }
+  });
+
   ipcMain.on(IPC.QUESTION_SKIP, () => {
     if (state.pendingQuestion) {
       overlayServer.skipQuestion(state.pendingQuestion.id);
@@ -324,12 +408,18 @@ async function main() {
 
   // Session monitoring (start before server so sessions are available immediately)
   sessionManager = new SessionManager((sessions: ClaudeSession[]) => {
+    const prevPid = state.activeSessionPid;
     state.sessions = sessions;
     if (!state.activeSessionPid && sessions.length > 0) {
       state.activeSessionPid = sessions[0].pid;
     }
     if (state.activeSessionPid && !sessions.find((s) => s.pid === state.activeSessionPid)) {
       state.activeSessionPid = sessions.length > 0 ? sessions[0].pid : null;
+    }
+    // Start conversation watch if active session changed
+    if (state.activeSessionPid !== prevPid) {
+      const session = sessions.find(s => s.pid === state.activeSessionPid);
+      if (session) startConversationWatch(session);
     }
     sendState();
   });
